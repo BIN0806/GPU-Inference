@@ -1,4 +1,4 @@
-# Dependencies for the CPU implementation (chunks 01–02)
+# Dependencies for the CPU implementation (chunks 01–03)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -35,3 +35,5 @@ CUDA, PyTorch, Triton, and Python packages are not runtime or build dependencies
 On the initial macOS host, combined ASan/UBSan compiled but hung during startup, including for an independent minimal probe. Debug, Release, and UBSan-only checks passed. See the validation record (local-only record) for reproduction and the unresolved ASan item.
 
 Chunk 02 adds no third-party dependencies. The `ubsan` configure/build/test presets capture the previously executed UBSan-only flags for Clang/GCC on macOS/Linux. `asan` still enables both address and undefined sanitizers. All 32 chunk 02 checks passed in Debug, Release, and UBSan-only builds; see part 02 evidence (local-only record).
+
+Chunk 03 uses standard C++17 `<memory_resource>` for request table allocation and isolated failure injection. No third-party dependency was added. The pool and selected memory resource must outlive their requests. See part 03 validation (local-only record) for the 52-check matrix and remaining limitations.

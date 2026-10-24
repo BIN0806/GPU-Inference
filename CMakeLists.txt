@@ -26,7 +26,8 @@ if(KVLAB_SANITIZE)
   target_link_options(kvlab_options INTERFACE -fsanitize=address,undefined)
 endif()
 
-add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp src/allocator/page_lease.cpp)
+add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp src/allocator/page_lease.cpp
+  src/allocator/request_state.cpp)
 target_include_directories(kvlab_allocator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(kvlab_allocator PUBLIC kvlab_options)
 
@@ -35,6 +36,9 @@ target_link_libraries(page_pool_demo PRIVATE kvlab_allocator)
 
 add_executable(shared_prefix_demo examples/shared_prefix_demo.cpp)
 target_link_libraries(shared_prefix_demo PRIVATE kvlab_allocator)
+
+add_executable(request_state_demo examples/request_state_demo.cpp)
+target_link_libraries(request_state_demo PRIVATE kvlab_allocator)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -52,10 +56,11 @@ if(BUILD_TESTING)
   )
   FetchContent_MakeAvailable(googletest)
   add_executable(page_pool_test tests/page_pool_test.cpp tests/page_sharing_test.cpp
-    tests/page_lease_test.cpp)
+    tests/page_lease_test.cpp tests/request_state_test.cpp tests/request_model_test.cpp)
   target_link_libraries(page_pool_test PRIVATE kvlab_allocator GTest::gtest_main)
   include(GoogleTest)
   gtest_discover_tests(page_pool_test DISCOVERY_MODE PRE_TEST)
   add_test(NAME PagePoolDemo COMMAND page_pool_demo)
   add_test(NAME SharedPrefixDemo COMMAND shared_prefix_demo)
+  add_test(NAME RequestStateDemo COMMAND request_state_demo)
 endif()

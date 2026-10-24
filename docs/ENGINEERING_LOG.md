@@ -130,6 +130,141 @@ Since the project still has no independent Git history, saved a source/build imp
 
 A generation identifies an allocation; a refcount counts owners; a lease balances one ownership obligation; a seal restricts mutation. None of these is a GPU completion fence. The distinction is now reflected in APIs, tests, and documentation. Total infrastructure spend remains $0, with no active cloud resource. Continue to per-request page tables, transactional acquisition, and rollback tests in chunk 03. Keep the first GPU spending gate closed until Phase 1's remaining acceptance criteria are met.
 
+## Entry 0005 — 2026-10-23 — Transactional request page tables
+
+**State:** implemented; final Debug, Release, and UBSan-only builds pass all 52 checks without compiler warnings. ASan remains open.
+
+### Design before implementation
+
+Add a move-only RequestState owning PageLease entries. Separate reserved length from committed length: reservation acquires capacity without declaring data valid; commit declares materialized tokens, seals newly completed pages, and exposes only committed token addresses. Share only a complete committed prefix into an empty request from the same pool. Request construction does not materialize payloads.
+
+Use a temporary candidate table for growth/sharing. Allocate its host metadata before acquiring new references; publish via a nonthrowing swap only after success. On failure, temporary leases clean up; existing request handles/lengths/references stay unchanged. A failed partial allocation may advance generations of briefly acquired pages or change free-list order, which are not rolled back. Candidate construction/movement costs O(total table size) at a page boundary; no bounded-latency claim.
+
+Use C++17 polymorphic memory resources for table metadata so allocation failure is deterministic and isolated in tests. The resource and pool outlive the request. Move construction steals storage; move assignment prepares replacement storage using the destination resource before releasing either side's ownership. Test capacity failure, host bad_alloc, injected generation exhaustion after partial acquisition, and retain overflow after partial prefix sharing.
+
+### Implementation and alternatives
+
+Added RequestState, typed operation statuses, committed-token address lookup, transaction staging, invariant diagnostics, and a runnable request demo. Candidate tables use the same PMR resource as their destination, preserving allocator-equality requirements for swap. Move assignment deliberately may allocate/throw; move construction remains noexcept. Resource behavior was checked against the C++ working draft; [ADR 0004](decisions/0004-request-transactions.md) records the alternatives and cost. Moved the existing pool test seam into one shared header to avoid divergent definitions across translation units; added an isolated failing-resource fixture.
+
+The full candidate design prioritizes a simple publication boundary over allocation efficiency. Crossing a page boundary takes O(total target table size) host work and temporary storage; repeated incremental growth can accumulate quadratic work. An in-place journal or maximum-capacity reservation is a measurement-driven follow-up, not an unmeasured optimization claim.
+
+### Observed problem, diagnosis, and fix
+
+The first Debug suite passed 52 checks but the compiler emitted three unused-result warnings in exception assertions. GoogleTest's EXPECT_THROW executes its statement without consuming the status returned by a nodiscard API. Changed those three test expressions to explicit `static_cast<void>(...)` discards; kept production nodiscard annotations. The clean final configurations emitted no warnings. Initial diagnostics are retained with the evidence. No allocator defect or failing runtime regression was observed; saturation/generation exhaustion/cancellation were deliberate test injections, not naturally encountered production failures.
+
+### Executed evidence
+
+All 52 checks passed in clean Debug, Release, and UBSan-only builds from the actual project path. The complete suite includes the previous 1,160,000 pool/sharing decisions and 64,000 multi-request model decisions. Fixed seeds are repeated across configurations, not counted as independent new workloads. Tested host bad_alloc before page acquisition, failure after a first new page is acquired, failure after a first prefix retain, capacity failure/retry, resource-aware moves, partial tails, cancellation, extreme arithmetic, and address visibility. Part 03 evidence (local-only record) links commands, output, source hashes, and limits; the blog post (local-only record) explains the engineering reasoning.
+
+Reversed the chunk 03 implementation patch in a temporary copy and verified thirteen chunk 02 input hashes; reapplied it and verified twenty chunk 03 hashes. Historical source manifests and raw outputs remain unchanged. No parent-repository Git metadata, staging, commit, push, or publication was performed. ASan's prior startup failure was not retried or relabeled as fixed. No GPU, CI, or performance result is claimed.
+
+### Learning, next action, and cost
+
+Reservation and commitment are different state transitions. Exception safety requires staging both resources and metadata, and defining exactly what rollback preserves. Pool generations are lifetime history, not transactional request state. Continue with synthetic CPU workload timing and memory/waste accounting before choosing a faster metadata strategy. Infrastructure spending remains $0 with no active cloud resource; Phase 1's remaining measurement and sanitizer gates are still open.
+
+## Entry 0006 — 2026-10-23 — Preparing one detailed Git commit per chunk
+
+**State:** reconstructed from verified saved snapshots; fresh isolated Debug
+builds pass 12/12, 32/32, and 52/52 checks. No implementation behavior changed.
+
+### Request, alternatives, and scope
+
+The user authorized adding each chunk to BIN0806/GPU-Inference as a detailed
+commit. Remote inspection confirmed an empty public repository with no branches.
+A single latest-state commit would lose the teaching sequence; reconstructing
+from the saved deliveries preserves working increments. The original project
+folder resolved to a home-directory Git repository, so history is assembled in
+an isolated repository before attaching dedicated Git metadata to the project.
+No ancestor-repository staging, commit, or history rewrite is part of this work.
+
+### Preparation and observed tooling issue
+
+Verified all 42, 69, and 99 files against their respective saved delivery
+checksums and checked the current project against the final snapshot. Imported
+only those files, excluding build trees and generated artifacts. Each commit
+message records the contract, alternatives, executed validation, article/ADR
+paths, and limitations. The initial commit includes the earlier planning and
+team/skill documents; dates are not backdated to imply pre-existing commits.
+
+The connected GitHub commit API requires a parent commit, so it cannot directly
+create the initial root commit. The CLI initially could not resolve GitHub
+inside the restricted network environment, and its authentication check reported
+failure there. Retrying the authorized read-only checks with network access
+confirmed the existing account login and empty remote. Use the authenticated
+Git CLI for the root history and a normal push; do not change credentials or
+force-push to bypass a failure.
+
+### Executed verification and records
+
+Copied each snapshot into a clean isolated source directory, configured Debug
+with the checksum-pinned local GoogleTest archive, built, and executed CTest.
+All 12/32/52 checks passed without compiler warnings. The three independent
+builds ran concurrently; their durations are not performance measurements.
+The [history guide](COMMIT_HISTORY.md) links the fresh configure/build/test logs
+and provides commands to inspect and build historical commits. Existing raw
+logs and source manifests remain unchanged. Publication preparation updates
+only current documentation and adds these logs; source/test/build input hashes
+remain those of chunk 03.
+
+The initial Git whitespace check flagged blank context lines inside the saved
+unified implementation patch. Those leading spaces are patch syntax, not source
+whitespace defects. Preserved the raw patch and reran the check on the changes
+excluding archived `*-implementation.patch` evidence files; it passed. This
+exception does not exclude production sources or current documentation.
+
+### Learning, limits, and next action
+
+A buildable commit is a useful teaching boundary and a reproducibility artifact.
+Snapshot hashes let us establish provenance without inventing earlier Git
+history. Release and UBSan runs remain historical evidence; ASan, CI, GPU work,
+and performance measurement receive no new validation claim. Publishing this
+history provisions no compute or storage rental; infrastructure spend remains
+$0. Verify the remote head against the prepared tip after the authorized push,
+then continue with chunk 04's CPU workload and memory-accounting experiments.
+
+## Entry 0007 — 2026-10-23 — Keep blog content local and out of Git history
+
+**State:** local-only publication policy applied to all three reconstructed
+commits; implementation behavior unchanged.
+
+### Request and decision
+
+The user requested that the blog be gitignored and absent from the repository
+anywhere. Adding an ignore rule or deleting tracked files in a new tip commit
+would leave the posts in earlier revisions. Rewrite the three-commit history
+to remove the complete `docs/blogs` subtree, including its evidence, and add
+the root-anchored ignore rule in every revision. Keep the local files intact.
+The public engineering log and design decisions remain versioned as requested
+by the project's continuous-documentation requirement.
+
+### Implementation and verification
+
+Confirmed that the remote advertised only `main`, with no other branch, tag,
+or pull-request ref. Constructed an independent repository from each original
+revision while excluding the blog subtree. This avoids carrying old blog blobs
+or backup refs into the replacement local object database. Updated public docs
+to remove links to absent files and contributor/agent instructions to forbid
+staging or copying the local posts into tracked files.
+
+Compared each rewritten revision with its original: code, tests, build files,
+dependency settings, and other non-Markdown files are unchanged, except for
+the intentional ignore rule. Checked every commit tree and reachable object
+for excluded paths and original blog blobs, plus the ignore rule in each
+revision. Recorded SHA-256 hashes for all 58 local blog/evidence files before
+the operation so local preservation can be verified during synchronization.
+No code tests were rerun for this documentation/history-only change.
+
+### Publication safety and limits
+
+Use a force-with-lease update bound to the previously observed remote head;
+abort if another writer changes it. Ordinary future pushes remain fast-forward.
+This user-authorized history removal is distinct from rewriting history merely
+to make a failed push succeed. Previous commit IDs change; do not merge old
+history back in. GitHub can retain cached old commits and other users can
+retain clones; this operation does not claim a platform-wide purge. The
+[history guide](COMMIT_HISTORY.md) records the boundary and reproduction steps.
+No cloud resource was provisioned, and infrastructure spending remains $0.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

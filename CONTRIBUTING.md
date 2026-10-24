@@ -64,6 +64,22 @@ Documentation / ADR / engineering-log links:
 
 Update the engineering log alongside implementation. Record real bugs and rejected hypotheses. Keep comments focused on invariants and reasons; names and code should communicate routine mechanics. Use [the team workflow](docs/TEAM_WORKFLOW.md) when splitting work across people or agents.
 
+## Detailed commits for implementation chunks
+
+Keep each completed chunk in a separate detailed commit with its code, tests,
+contemporaneous engineering-log entry, and public design decisions. Maintain
+the standalone article separately in the ignored local blog directory. Preserve earlier buildable installments. The subject identifies the
+behavior and chunk number; the body explains the problem, design and tradeoffs,
+executed validation with evidence paths, and known limitations. Distinguish
+new checks from historical results, and measured performance from hypotheses.
+
+The project's remote is `https://github.com/BIN0806/GPU-Inference.git`. Before
+publishing, confirm the repository root, remote, branch, intended file list,
+and existing remote history. Exclude build outputs and credentials. Use normal
+fast-forward pushes within the user's authorization; do not replace remote
+history to make a push succeed. New feature branches use `codex/` as above.
+See [the chunk history guide](docs/COMMIT_HISTORY.md) for the initial snapshots.
+
 ## Local-only blog policy
 
 The entire `/docs/blogs/` directory is gitignored, including articles, indexes,

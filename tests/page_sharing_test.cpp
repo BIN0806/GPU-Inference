@@ -1,5 +1,6 @@
 #include "kvlab/page_pool.hpp"
 #include "kvlab/page_lease.hpp"
+#include "support/page_pool_test_access.hpp"
 
 #include <gtest/gtest.h>
 
@@ -12,15 +13,6 @@
 #include <vector>
 
 namespace kvlab {
-namespace detail {
-// Deliberate white-box seam for a boundary impractical to reach via billions of retains.
-// The synthetic count is restored before teardown; this is not a real owner workload.
-struct PagePoolTestAccess {
-  static void set_references(PagePool& pool, PageHandle handle, std::uint32_t count) {
-    pool.slots_.at(handle.id).references = count;
-  }
-};
-}  // namespace detail
 namespace {
 
 TEST(PageSharing, PageGeometryMustBePositive) {
