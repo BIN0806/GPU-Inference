@@ -2,7 +2,13 @@
 
 A C++/CUDA inference-components laboratory built in small, explained, testable increments: a fixed-page KV allocator, fused residual/RMSNorm, and single-layer paged decode attention.
 
-**Implemented: chunks 01–03, the CPU allocator and request ownership layer.** The page pool has generation-tagged handles, checked references, and full-page sealing. Move-only leases balance ownership. `RequestState` adds per-request tables, separate reserved/committed lengths, committed-token address translation, transactional growth and prefix sharing, and cancellation cleanup. This is CPU metadata only: KV payloads, CUDA kernels, and performance benchmarks remain planned. Infrastructure spending is **$0**, with a **$100 ceiling** and **$20 first spending checkpoint**.
+**Implemented: chunks 01–04, CPU allocator ownership and workload measurements.**
+Generation-tagged pages, checked sharing, move-only leases, and transactional
+request tables now have complete-owner memory accounting and seeded CPU replay.
+The benchmark records admission failures, page waste, metadata allocations, and
+instrumented/aggregate timings. KV payloads, CUDA kernels, and real serving remain
+planned. Recorded infrastructure spending is **$0**, with a **$100 ceiling** and
+**$20 first spending checkpoint**.
 
 Start with the [engineering roadmap](ROADMAP.md), [implementation log](docs/ENGINEERING_LOG.md), and code contracts below. Blog posts are local-only and are not distributed with the repository.
 
@@ -19,7 +25,7 @@ ctest --preset debug
 ./build/debug/request_state_demo
 ```
 
-The first test-enabled configure fetches a SHA-256-pinned GoogleTest archive. See [dependencies](docs/DEPENDENCIES.md) for offline configuration and a tests-disabled build. Release and sanitizer configurations use the `release`, `ubsan`, and `asan` presets. All 52 checks passed without compiler warnings in clean Debug, Release, and UBSan-only builds for chunk 03. Combined ASan/UBSan startup remains unresolved from chunk 01 and was not rerun in this increment. Executed results and environment limitations belong in the validation record; a build configuration alone is not proof that a check passed.
+The first test-enabled configure fetches a SHA-256-pinned GoogleTest archive. See [dependencies](docs/DEPENDENCIES.md) for offline configuration and a tests-disabled build. Release and sanitizer configurations use the `release`, `ubsan`, and `asan` presets. All 67 checks passed without compiler warnings in Debug, Release, and UBSan-only builds for chunk 04. After the timing refinement, the affected benchmark output-contract check passed again in all three modes. Python 3 enables that integration check; without it, CTest registers 66 checks. Combined ASan/UBSan startup remains unresolved from chunk 01 and was not rerun in this increment. Executed results and environment limitations belong in the validation record; a build configuration alone is not proof that a check passed.
 
 The original development directory ends in a space. Quote that path in shell commands; a fresh clone can use a conventional directory name.
 
@@ -32,7 +38,10 @@ Each completed implementation chunk has its own detailed commit. See the [chunk 
 - [RequestState contract](include/kvlab/request_state.hpp) and [implementation](src/allocator/request_state.cpp): reserve capacity, declare committed tokens, share complete prefixes, and translate token addresses.
 - [Request failure tests](tests/request_state_test.cpp) and [multi-request model](tests/request_model_test.cpp): deterministic failure injection and 64,000 request transitions, alongside the earlier 1,160,000 pool/sharing decisions per complete suite.
 - [Page-pool demo](examples/page_pool_demo.cpp), [page-sharing demo](examples/shared_prefix_demo.cpp), and [request demo](examples/request_state_demo.cpp): runnable metadata examples.
-- Next chunk: CPU workload measurements, memory accounting, and fragmentation experiments before GPU spending.
+- [Memory accounting](include/kvlab/memory_accounting.hpp): reconcile all owners, unique pages, reservation gaps, cache-only pages, and modeled KV bytes.
+- [Workload replay](include/kvlab/workload.hpp) and [benchmark CLI](bench/allocator_bench.cpp): deterministic offered events, capacity failures, PMR counters, and reproducible output.
+- [Benchmark contract](docs/BENCHMARKS.md) and [measured CPU report](docs/experiments/0002-cpu-allocator-screening.md): 108-run page-size/sharing sweep, raw-data provenance, timer limits, and charts.
+- Next: validate ASan on a functioning host and isolate request-table/primitive timing experiments before declaring Phase 1 complete.
 
 Request commitment declares materialized tokens; it does not write payloads or wait for a GPU. Borrowed request handles must not be manually retained, released, or sealed. The pool and any supplied metadata memory resource must outlive the request. CPU reference count zero does not prove GPU completion.
 
@@ -46,4 +55,17 @@ Before changing the implementation, trace the request demo and explain why reser
 - [Experiment template](docs/templates/EXPERIMENT.md): hypotheses, baselines, raw measurements, and conclusions.
 - [Project guidance](AGENTS.md), [development conventions](CONTRIBUTING.md), and [team/subagent workflow](docs/TEAM_WORKFLOW.md): chunk boundaries, reviews, ownership, and continuous documentation.
 
-The roadmap's repository tree includes proposed future files. Follow this README and the blog index for implemented scope. No allocator speedup, GPU result, or end-to-end serving capability is claimed.
+The roadmap's repository tree includes proposed future files. Follow this README and the engineering log for implemented scope. CPU workload measurements are available; no allocator speedup, GPU result, or end-to-end serving capability is claimed.
+
+## First CPU experiment
+
+```sh
+cmake --preset release
+cmake --build --preset release --parallel 4
+./build/release/allocator_bench --output artifacts/first-run --events 20000
+```
+
+The output directory must not already exist. Read the benchmark contract before
+interpreting timings: zero-duration samples mean timer resolution limits, and
+whole-trace means include skipped/rejected work. Modeled KV bytes are not device
+memory allocations. The next GPU spending gate remains closed in this session.

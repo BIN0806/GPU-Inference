@@ -49,6 +49,7 @@ class RequestState {
   std::size_t reserved_length() const noexcept { return reserved_length_; }
   std::size_t page_count() const noexcept { return pages_.size(); }
   bool attached() const noexcept { return pool_ != nullptr; }
+  bool belongs_to(const PagePool& pool) const noexcept { return pool_ == &pool; }
   // Includes reserved pages; a token location is exposed only for committed positions.
   [[nodiscard]] std::optional<PageHandle> page_handle(std::size_t logical_page) const noexcept;
   [[nodiscard]] std::optional<TokenLocation> token_location(std::size_t position) const noexcept;

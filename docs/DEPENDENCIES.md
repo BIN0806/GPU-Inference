@@ -37,3 +37,18 @@ On the initial macOS host, combined ASan/UBSan compiled but hung during startup,
 Chunk 02 adds no third-party dependencies. The `ubsan` configure/build/test presets capture the previously executed UBSan-only flags for Clang/GCC on macOS/Linux. `asan` still enables both address and undefined sanitizers. All 32 chunk 02 checks passed in Debug, Release, and UBSan-only builds; see part 02 evidence (local-only record).
 
 Chunk 03 uses standard C++17 `<memory_resource>` for request table allocation and isolated failure injection. No third-party dependency was added. The pool and selected memory resource must outlive their requests. See part 03 validation (local-only record) for the 52-check matrix and remaining limitations.
+
+## Chunk 04 tools
+
+The workload and accounting libraries use C++17 only; no production dependency
+was added. Python 3 (standard library) enables `BenchmarkOutputContract` in CTest
+and runs the serial sweep. The CMake check is optional; read the registered test
+count to know whether it ran. Tested Python: 3.14.8.
+
+Plotting is optional and isolated from compilation and measurement. Install the
+pinned package set in `scripts/requirements-plot.txt` into a virtual environment.
+The lock records the tested macOS ARM64/Python 3.14 environment; other platforms
+may require another reviewed lock. Matplotlib 3.10.8 creates the static charts.
+Its distribution and those of its dependencies include their own license files.
+The experiment provenance records the versions used for the checked figures.
+Neither plotting nor dependency installation provisions a GPU.

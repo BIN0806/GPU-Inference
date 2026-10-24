@@ -27,7 +27,7 @@ if(KVLAB_SANITIZE)
 endif()
 
 add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp src/allocator/page_lease.cpp
-  src/allocator/request_state.cpp)
+  src/allocator/request_state.cpp src/allocator/memory_accounting.cpp)
 target_include_directories(kvlab_allocator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(kvlab_allocator PUBLIC kvlab_options)
 
@@ -39,6 +39,12 @@ target_link_libraries(shared_prefix_demo PRIVATE kvlab_allocator)
 
 add_executable(request_state_demo examples/request_state_demo.cpp)
 target_link_libraries(request_state_demo PRIVATE kvlab_allocator)
+
+add_library(kvlab_workload STATIC src/bench/workload.cpp)
+target_link_libraries(kvlab_workload PUBLIC kvlab_allocator)
+add_executable(allocator_bench bench/allocator_bench.cpp)
+target_link_libraries(allocator_bench PRIVATE kvlab_workload)
+target_compile_definitions(allocator_bench PRIVATE KVLAB_BUILD_TYPE="$<CONFIG>")
 
 include(CTest)
 if(BUILD_TESTING)
@@ -60,6 +66,14 @@ if(BUILD_TESTING)
   target_link_libraries(page_pool_test PRIVATE kvlab_allocator GTest::gtest_main)
   include(GoogleTest)
   gtest_discover_tests(page_pool_test DISCOVERY_MODE PRE_TEST)
+  add_executable(workload_test tests/memory_accounting_test.cpp tests/workload_test.cpp)
+  target_link_libraries(workload_test PRIVATE kvlab_workload GTest::gtest_main)
+  gtest_discover_tests(workload_test DISCOVERY_MODE PRE_TEST)
+  find_package(Python3 COMPONENTS Interpreter QUIET)
+  if(Python3_Interpreter_FOUND)
+    add_test(NAME BenchmarkOutputContract COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_output_test.py" "$<TARGET_FILE:allocator_bench>")
+  endif()
   add_test(NAME PagePoolDemo COMMAND page_pool_demo)
   add_test(NAME SharedPrefixDemo COMMAND shared_prefix_demo)
   add_test(NAME RequestStateDemo COMMAND request_state_demo)

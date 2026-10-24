@@ -1,12 +1,13 @@
 # Implementation chunks and Git history
 
-The repository preserves three independently buildable implementation chunks:
+The repository preserves independently buildable implementation chunks:
 
 | Chunk | Commit subject | Previously executed Debug checks |
 |---|---|---:|
 | 01 | `feat(allocator): add generation-safe page pool (chunk 01)` | 12/12 |
 | 02 | `feat(allocator): add sealed-page sharing and RAII leases (chunk 02)` | 32/32 |
 | 03 | `feat(allocator): add transactional request tables (chunk 03)` | 52/52 |
+| 04 | `feat(bench): add CPU workload replay and memory accounting (chunk 04)` | 67/67; affected CLI check repeated after timing refinement |
 
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to
@@ -55,3 +56,7 @@ back into this repository; use a fresh clone when replacing an old checkout.
 History rewriting removes branch references, but cannot guarantee deletion from
 GitHub caches or third-party clones. See
 [GitHub's history-removal documentation](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
+
+Chunk 04 adds the [benchmark contract](BENCHMARKS.md) and public CPU experiment
+report. These are engineering records, maintained separately from the ignored
+local blog. Its source and result provenance are linked from the report.

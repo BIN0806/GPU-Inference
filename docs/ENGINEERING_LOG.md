@@ -265,6 +265,99 @@ retain clones; this operation does not claim a platform-wide purge. The
 [history guide](COMMIT_HISTORY.md) records the boundary and reproduction steps.
 No cloud resource was provisioned, and infrastructure spending remains $0.
 
+## Entry 0008 — 2026-10-24 — CPU workload replay and physical-memory accounting
+
+**State:** implemented and tested; 67 checks passed in Debug, Release, and UBSan.
+Two 108-run CPU sweeps are retained; EXP-0002 supplies the current measurement
+protocol and public results. No GPU was provisioned.
+
+### Contract and alternatives
+
+The next Phase 1 increment measures CPU metadata operations and synthetic pool
+pressure before GPU spending. Add a diagnostic union-of-pages accounting pass
+and deterministic event replay. Every owner must be supplied, including the
+explicit shared-prefix owner; reject partial inventories instead of presenting
+misleading physical-byte totals. Count committed tokens, reservation gaps, tail
+slack, cache-only pages, and free pool capacity separately. All KV bytes are
+modeled; there is no device or host KV payload allocation.
+
+An event trace is generated before replay with admissions/appends/completions/
+cancellations independent of allocator outcomes. Reusing it across policies
+makes rejected work visible. This is a slot-based stress test, not a queueing or
+LLM serving simulator. Diagnostic replay is separate from individually timed
+operations and checks that both passes make identical decisions. Request-table
+PMR allocation counters are included in the measured path; output/trace creation
+and full invariant scans are excluded. Successful appends with and without
+metadata allocation are reported separately.
+
+### Implementation and initial review
+
+Added memory accounting, a pool-identity query on RequestState, a workload
+library, a CLI benchmark, output-contract tests, a serial experiment runner,
+and optional plots. Initial Debug validation passed all 67 checks. Review then
+identified reporting refinements: distinguish exclusively cached pages and
+split append timing by metadata allocation, since grouping boundary growth
+with within-page appends would obscure the intended experiment. These were
+coverage/measurement-design refinements, not observed allocator defects.
+
+### Observed measurement problem and response
+
+The first sweep completed 108 runs, but inspection found a zero-valued timer
+control median and many zero event durations. An empty-control histogram later
+showed 6,621 zeros and nonzero steps of 41–42 ns. Subtracting timer overhead or
+claiming zero-cost operations would be misleading. Preserved EXP-0001, added
+zero-sample counts and the full control histogram, and added a whole-trace pass
+with only two clock reads. This separates a mean across offered events from
+individual operation percentiles. It does not improve the clock's resolution.
+
+Rebuilt the benchmark and reran its output-contract check successfully in all
+three build modes. The unchanged full library/model suites had already passed
+67/67 in each configuration, without warnings. Repeated the 108-run sweep with
+the revised measurement boundary; every capacity result and offered-trace hash
+matched the prior experiment. No allocator runtime defect was observed.
+
+### Evidence and limitations
+
+[The experiment report](experiments/0002-cpu-allocator-screening.md) links the
+108-run data table, compact latency histogram, source/binary/configuration
+provenance, and inspected charts. [ADR 0005](decisions/0005-cpu-workload-measurement.md)
+and [the benchmark contract](BENCHMARKS.md) explain alternatives and exact timing
+boundaries. Full raw traces and validation logs are retained under ignored local
+artifacts; the blog is separately ignored and has not been published.
+
+At P=16, median admission rejection was about 56.5% without sharing and 43.5%
+with 90% offered sharing. Request-table allocations increased from 3,106 to
+6,492 per trace; more accepted work and explicit sharing transactions both
+contribute. No causal split or speedup is claimed. At 0% sharing, mean sampled
+tail slack rose from 34.6 slots at P=8 to 280.7 at P=64. One aggregate timing
+outlier (535.93 ns/offered event) remains in the results; its cause is unresolved
+on this nonexclusive host. Seed repetitions add timing observations, not new
+independent capacity workloads. The figures show observed ranges, not confidence
+intervals. A font-cache permission diagnostic did not prevent chart rendering;
+both generated figures were inspected. Repository review found generated SVG trailing
+spaces and CSV CRLF line endings. Normalized only the public copies, verified
+unchanged CSV values/XML semantics, and kept the original raw artifacts intact.
+
+The new tests add 32,000 independent-model unshared transitions and 8,000 shared
+transitions per full suite. Existing invariants and transactional-failure tests
+remain. ASan's earlier host startup issue remains unresolved; no ASan, Linux,
+CI, GPU, or end-to-end serving validation is claimed. Formatting was reviewed
+manually; clang-format was unavailable. A tests-disabled Release build also
+succeeded and ran benchmark help without fetching GoogleTest. A fresh Debug
+build from the delivered project directory (including its trailing space) then
+passed all 67 checks without compiler warnings. The output is retained in
+`artifacts/validation/delivered-debug.txt`.
+
+### Decision, cost, and next step
+
+Keep the correctness-first candidate-table algorithm. Use the observed allocation
+counts to design a separate journal/pre-reservation comparison with the same
+failure contract, and batch primitive timings to reduce clock granularity effects.
+Do not select GPU page geometry from CPU data. Finish the open sanitizer gate
+before calling Phase 1 complete. Infrastructure spending remains $0; this
+session installed only optional plotting packages in an isolated local environment.
+
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question
