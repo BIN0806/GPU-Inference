@@ -27,3 +27,7 @@ Capacity is bounded by INT32_MAX for the planned signed device page-table repres
 The focused tests cover capacity, uniqueness, exhaustion, reuse, invalid/double/stale releases, and arbitrary release order. A separate set-based model drives 16 × 10,000 seeded operation steps. See part 01 evidence (local-only record) for actually executed configurations/results. No latency claim, GPU safety guarantee, request rollback, prefix sharing, or concurrency support is established.
 
 Revisit the contract when adding reference counts/request RAII, multiple interacting pools, or asynchronous readers. Preserve stale-handle tests as the ownership system grows. GPU reclamation will require completion fencing even when a CPU generation check succeeds.
+
+## Amendment — chunk 02
+
+The one-owner implementation above is historical. [ADR 0003](0003-sealed-pages-and-leases.md) replaces its live flag with checked references and adds sealing and ownership leases. `Released` now means one reference dropped. It does not necessarily return a physical page to the free list. Chunk 01 evidence and the source transition remain linked from the blog series.

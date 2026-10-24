@@ -100,6 +100,36 @@ The combined ASan/UBSan build compiled, but CTest discovery timed out after five
 
 GPU spend remains $0; no resource was provisioned. The first blog post (local-only record) explains invariants, generation handles, container alternatives, reproduction, and the observed tooling failure. A minimal probe narrowed the sanitizer investigation more effectively than changing allocator code without evidence. No performance experiment or speedup is claimed. Proceed to reference-counted complete-page sharing in part 02, carrying the ASan validation item forward.
 
+## Entry 0004 — 2026-10-23 — Reference-counted sealed pages and ownership leases
+
+**State:** implemented; clean Debug, Release, and UBSan-only builds pass 32 checks. ASan remains unvalidated on this host.
+
+### Contract and prediction
+
+Extend the single-threaded page pool with references starting at one, checked retain/release, and irreversible sealing of complete pages. Predict that owner teardown order will not affect final capacity and that rejecting a mutable-page share leaves state unchanged. A generation-tagged handle identifies an allocation, not an individual owner: manual duplicate release while another reference exists cannot be identified by the count alone. Add a move-only RAII PageLease to balance references for normal callers, while preserving the low-level pool API and its explicit obligations.
+
+### Alternatives and scope
+
+Use non-atomic counters because all metadata operations remain on one owner thread. Sealing requires a caller-declared valid-token count equal to the configured tokens per page; no KV payload exists yet, so the allocator cannot prove a caller wrote those tokens. Once sealed, a page stays immutable even when its count returns to one. Copies of handles do not retain. Sharing retains the existing generation; final release returns the ID, and reallocation starts a new generation. Request tables, automatic prefix lookup, partial-page copy-on-write, and GPU completion fencing remain later chunks.
+
+### Implementation and review
+
+Changed PagePool metadata from a live bit to checked references plus a sealed flag. Added seal/retain/inspect APIs, positive page geometry, and invariant checks requiring all shared pages to be sealed. Added PageLease allocation/sharing, moves, reset/destruction, ownership preconditions, and a shared-prefix metadata demo. Added sharing/lease test modules and a UBSan-only preset; no new dependency. [ADR 0003](decisions/0003-sealed-pages-and-leases.md) explains alternatives and the part 02 article (local-only record) teaches the transitions.
+
+The first Debug run passed 31 checks. Manual contract review identified an additional coverage gap: the lease factory's behavior when retain overflows. Added a controlled counter-saturation case to verify no extra owner is created, then validated the final 32-check suite. No allocator defect or failing regression was observed during these runs; the duplicate-owner-release scenario is an anticipated manual-API limitation, not a fixed runtime failure. Tests also cover all six release orders for three owners, exception unwinding, cross-pool moves, and shared-page move assignment.
+
+### Executed evidence and limitations
+
+Clean builds from the actual project path passed all 32 checks in Debug, Release, and UBSan-only modes. Each suite includes 100 × 10,000 sharing-model decisions and the original 16 × 10,000 pool-model decisions; repeating the same seeds under different modes is not additional independent workload coverage. Exact commands, outputs, and source hashes are in the validation record (local-only record).
+
+The unchanged ASan host-startup limitation was not retried or relabeled as fixed. UBSan is not equivalent memory-error coverage. No GPU code, payload write enforcement, request rollback, concurrency test, or performance measurement is claimed.
+
+Since the project still has no independent Git history, saved a source/build implementation patch. Reversed it in an isolated temporary copy and verified all eight original chunk 01 input hashes; reapplied it and verified all thirteen chunk 02 input hashes. Historical article/evidence annotations now distinguish their snapshots from current code. No parent-repository Git metadata was changed; no staging, commit, push, or publication was performed.
+
+### Learning, cost, and next action
+
+A generation identifies an allocation; a refcount counts owners; a lease balances one ownership obligation; a seal restricts mutation. None of these is a GPU completion fence. The distinction is now reflected in APIs, tests, and documentation. Total infrastructure spend remains $0, with no active cloud resource. Continue to per-request page tables, transactional acquisition, and rollback tests in chunk 03. Keep the first GPU spending gate closed until Phase 1's remaining acceptance criteria are met.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

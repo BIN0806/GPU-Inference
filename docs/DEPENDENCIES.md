@@ -1,4 +1,4 @@
-# Dependencies for implementation chunk 01
+# Dependencies for the CPU implementation (chunks 01–02)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -33,3 +33,5 @@ cmake --build build/library-only
 CUDA, PyTorch, Triton, and Python packages are not runtime or build dependencies of chunk 01. No CI service has been run; Linux portability checks and CI configuration are subsequent work.
 
 On the initial macOS host, combined ASan/UBSan compiled but hung during startup, including for an independent minimal probe. Debug, Release, and UBSan-only checks passed. See the validation record (local-only record) for reproduction and the unresolved ASan item.
+
+Chunk 02 adds no third-party dependencies. The `ubsan` configure/build/test presets capture the previously executed UBSan-only flags for Clang/GCC on macOS/Linux. `asan` still enables both address and undefined sanitizers. All 32 chunk 02 checks passed in Debug, Release, and UBSan-only builds; see part 02 evidence (local-only record).

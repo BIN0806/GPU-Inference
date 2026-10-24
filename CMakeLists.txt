@@ -6,12 +6,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(KVLAB_ENABLE_CUDA "Build CUDA components (not implemented in chunk 01)" OFF)
+option(KVLAB_ENABLE_CUDA "Build CUDA components (not implemented yet)" OFF)
 option(KVLAB_SANITIZE "Enable host AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
 set(KVLAB_GTEST_ARCHIVE "" CACHE FILEPATH "Optional local copy of the pinned GoogleTest archive")
 
 if(KVLAB_ENABLE_CUDA)
-  message(FATAL_ERROR "Chunk 01 is CPU-only. Configure with KVLAB_ENABLE_CUDA=OFF.")
+  message(FATAL_ERROR "Current implementation is CPU-only. Configure with KVLAB_ENABLE_CUDA=OFF.")
 endif()
 
 add_library(kvlab_options INTERFACE)
@@ -26,12 +26,15 @@ if(KVLAB_SANITIZE)
   target_link_options(kvlab_options INTERFACE -fsanitize=address,undefined)
 endif()
 
-add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp)
+add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp src/allocator/page_lease.cpp)
 target_include_directories(kvlab_allocator PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
 target_link_libraries(kvlab_allocator PUBLIC kvlab_options)
 
 add_executable(page_pool_demo examples/page_pool_demo.cpp)
 target_link_libraries(page_pool_demo PRIVATE kvlab_allocator)
+
+add_executable(shared_prefix_demo examples/shared_prefix_demo.cpp)
+target_link_libraries(shared_prefix_demo PRIVATE kvlab_allocator)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -48,9 +51,11 @@ if(BUILD_TESTING)
     DOWNLOAD_EXTRACT_TIMESTAMP FALSE
   )
   FetchContent_MakeAvailable(googletest)
-  add_executable(page_pool_test tests/page_pool_test.cpp)
+  add_executable(page_pool_test tests/page_pool_test.cpp tests/page_sharing_test.cpp
+    tests/page_lease_test.cpp)
   target_link_libraries(page_pool_test PRIVATE kvlab_allocator GTest::gtest_main)
   include(GoogleTest)
   gtest_discover_tests(page_pool_test DISCOVERY_MODE PRE_TEST)
   add_test(NAME PagePoolDemo COMMAND page_pool_demo)
+  add_test(NAME SharedPrefixDemo COMMAND shared_prefix_demo)
 endif()

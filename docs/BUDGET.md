@@ -24,6 +24,7 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 |---|---|---|---:|---:|---:|---:|---|---|
 | Planning | 2026-10-23 | None | $0 | $0 | $0 | N/A | No resource provisioned | Roadmap only |
 | Chunk 01 | 2026-10-23 | Local CPU only | $0 | $0 | $0 | N/A | No cloud resource provisioned | Page-pool implementation and blog |
+| Chunk 02 | 2026-10-23 | Local CPU only | $0 | $0 | $0 | N/A | No cloud resource provisioned | Reference-counted sharing, leases, tests, and blog |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
