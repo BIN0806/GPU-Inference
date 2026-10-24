@@ -1,0 +1,3 @@
+interface:
+  display_name: "CUDA Kernel Engineering"
+  short_description: "Review kernel math, indexing, and reductions"

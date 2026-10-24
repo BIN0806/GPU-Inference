@@ -1,0 +1,3 @@
+interface:
+  display_name: "Engineering Evidence Record"
+  short_description: "Maintain decisions, experiments, and history"

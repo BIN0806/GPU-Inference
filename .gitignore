@@ -1,0 +1,10 @@
+/build/
+/artifacts/
+/.venv/
+/CMakeUserPresets.json
+__pycache__/
+*.pyc
+.DS_Store
+
+# Local-only blog posts and their evidence.
+/docs/blogs/

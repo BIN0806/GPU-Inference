@@ -1,0 +1,3 @@
+interface:
+  display_name: "KV Allocator Engineering"
+  short_description: "Review page ownership, sharing, and rollback"

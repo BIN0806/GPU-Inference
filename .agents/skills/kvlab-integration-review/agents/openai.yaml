@@ -1,0 +1,3 @@
+interface:
+  display_name: "CPU/GPU Integration Review"
+  short_description: "Audit cache lifetime and module contracts"

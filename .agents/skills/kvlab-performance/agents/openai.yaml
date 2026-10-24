@@ -1,0 +1,3 @@
+interface:
+  display_name: "GPU Performance Experiments"
+  short_description: "Design fair benchmarks and interpret evidence"
