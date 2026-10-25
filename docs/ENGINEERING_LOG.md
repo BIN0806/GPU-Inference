@@ -441,7 +441,7 @@ timing; this validation increment alone does not declare all of Phase 1 complete
 
 ## Entry 0010 — 2026-10-25 — Reuse request metadata without weakening logical rollback
 
-**State:** implemented, locally tested and measured; Linux CI pending.
+**State:** implemented, measured, and tested locally and on Linux.
 
 ### Hypothesis and boundary
 
@@ -502,6 +502,29 @@ schema or timing boundary. The CPU model query initially failed in the restricte
 command environment; a read-only retry identified Apple M3 Pro. No configuration
 was changed. macOS ASan remains the previously documented environment limitation;
 Linux sanitizer coverage of this new source is the next gate. Cost remains $0.
+
+### Linux result and final review
+
+[Run 40232916754](https://github.com/BIN0806/GPU-Inference/actions/runs/40232916754) passed on implementation
+[`d0ad3a8`](https://github.com/BIN0806/GPU-Inference/commit/d0ad3a8b459fa52ce1cfa16964a7b783b485eafb). Debug/Release
+passed 73 checks each; ASan/UBSan/combined passed 74 each, including detector
+preflights and compilation audits. GCC 13.3.0 on Ubuntu 24.04 image
+`20261023.334.3`, CMake 3.31.6, Ninja 1.13.2, Python 3.12.3. All jobs completed;
+zero Actions artifacts were uploaded. Saved logs contain no compiler warnings
+or unexpected sanitizer findings. No allocator change or CI rerun was needed.
+
+Final report review found one remaining display assumption: the optional chart
+subtitle hard-coded three seeds and three repeats even though the runner accepts
+other counts. Replaced it with the actual number of paired observations and
+regenerated the chart. This changes plot metadata only; the measured C++ code,
+timing harness, pair table, and comparison script are unchanged. The evidence
+follow-up records this small plot fix explicitly rather than calling its entire
+diff documentation-only. The original measured source remains identified above.
+
+Keep the measured tradeoffs, retain the Mac ASan limitation, and proceed to a
+correctness-first residual/RMSNorm contract and remote preflight preparation.
+No GPU rental occurred and spending remains $0. The first spending gate is still
+$20 all-in; future pricing and profiling permissions need verification before use.
 
 ## Entry template — copy for each session
 

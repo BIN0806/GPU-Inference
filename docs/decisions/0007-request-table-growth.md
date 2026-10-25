@@ -1,7 +1,6 @@
 # ADR 0007 — Reuse request-table storage and roll back the acquired suffix
 
-Date: 2026-10-25. Status: implemented; local validation passed; experiment and
-Linux validation in progress. Supersedes only the growth transaction in
+Date: 2026-10-25. Status: implemented, measured, and tested locally and on Linux. Supersedes only the growth transaction in
 [ADR 0004](0004-request-transactions.md). Sharing and move assignment retain
 their original candidate-table transactions.
 

@@ -44,7 +44,7 @@ def main():
         ax.set_axisbelow(True)
     axes[0].legend(fontsize=8)
     fig.suptitle("Request-table storage reuse: fewer allocations, more retained memory\n"
-                 "CPU metadata only · 3 trace seeds × 3 repeats per case · medians and observed ranges", fontsize=13)
+                 f"CPU metadata only · {len(rows)} paired observations total · medians and observed ranges", fontsize=13)
     fig.savefig(args.directory / "request-growth-comparison.png", dpi=160)
     fig.savefig(args.directory / "request-growth-comparison.svg")
     plt.close(fig)

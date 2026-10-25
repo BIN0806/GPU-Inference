@@ -4462,8 +4462,8 @@
     "p8-s90-seed7-r2-candidate/timer-control.csv": "3df9de7c3db7d7db0b1bdf59c13a12afeca2d7968f8527f4a36e433d1e42177c",
     "p8-s90-seed7-r2-candidate.log": "c04bafc572b36191f993a6a225eea07b77964cec99f8dc23f8e479be0645aa55",
     "pairs.csv": "17c738748b2fcb167d1c39623eafd75c2d31252d818abd223a2eeead5f2b24d1",
-    "request-growth-comparison.png": "0ac89849f89f3b003454a0562d73ed69f9c503b7f8635fbb92e1cf0ef2d01d90",
-    "request-growth-comparison.svg": "b0653ad1d79110b53a820db3831b870eb4c23a287529797b1559f6b512b68005",
+    "request-growth-comparison.png": "e0097fdc480b5892c1f1a717882104cf7f4aec908c9449fb3e7e25f6bdef6976",
+    "request-growth-comparison.svg": "9e60e325ff1f681317b14e2fab2f7a4b6e71c60f536cc073051b641351fbcb03",
     "tracked-working-tree.patch": "c2c280bb1442496fb16c301e1ed3d67e6ea927d755873ce54d2397a525f9fd54"
   },
   "environment": {
@@ -4474,5 +4474,6 @@
     "ninja": "1.13.2",
     "cpu": "Apple M3 Pro (verified with read-only sysctl outside the restricted command environment)",
     "libcxx_version": 200100
-  }
+  },
+  "final_plot_script_sha256": "22ee68fece99c1771de6c6541dfe727af07eca69360447b1ca1c21579bbeb318"
 }

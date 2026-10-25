@@ -36,9 +36,9 @@ Chunk 06 passes 73 local Debug/Release checks and 74 UBSan checks. The new
 failure tests preserve shared prefixes and request state while permitting retained
 host capacity. The [paired CPU experiment](docs/experiments/0003-request-table-growth.md)
 records 54 matching workload pairs, fewer allocation calls, increased host memory,
-and a small regression in one regime. Linux sanitizer validation for this chunk
-is pending. See [the validation guide](docs/VALIDATION.md) for the previous
-successful Linux matrix and the unresolved local Mac ASan initialization issue.
+and a small regression in one regime. All five [Linux configurations](https://github.com/BIN0806/GPU-Inference/actions/runs/40232916754) also pass
+(73 normal / 74 sanitized checks). See [the validation guide](docs/VALIDATION.md)
+for the executed matrix and unresolved local Mac ASan initialization issue.
 
 The original development directory ends in a space. Quote that path in shell commands; a fresh clone can use a conventional directory name.
 
@@ -56,7 +56,7 @@ Each completed implementation chunk has its own detailed commit. See the [chunk 
 - [Benchmark contract](docs/BENCHMARKS.md) and [measured CPU report](docs/experiments/0002-cpu-allocator-screening.md): 108-run page-size/sharing sweep, raw-data provenance, timer limits, and charts.
 - [Validation guide](docs/VALIDATION.md): independent sanitizer modes, fault-detection probes, compilation audits, and Linux CI.
 - [Growth decision](docs/decisions/0007-request-table-growth.md) and [paired comparison](docs/experiments/0003-request-table-growth.md): suffix rollback, allocation reductions, retained-memory cost, and a measured regression.
-- Next: finish this chunk's Linux validation, then prepare the correctness-first residual/RMSNorm interface and remote preflight before a budgeted GPU session.
+- Next: prepare the correctness-first residual/RMSNorm interface and remote preflight before a budgeted GPU session.
 
 Request commitment declares materialized tokens; it does not write payloads or wait for a GPU. Borrowed request handles must not be manually retained, released, or sealed. The pool and any supplied metadata memory resource must outlive the request. CPU reference count zero does not prove GPU completion.
 

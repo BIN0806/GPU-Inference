@@ -29,7 +29,7 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 04 | 2026-10-24 | Local CPU only | $0 | $0 | $0 | N/A | No remote compute/storage provisioned by this session | Accounting tests, two retained 108-run sweeps, and local plots |
 | Chunk 05 | 2026-10-25 | Local CPU and standard public-repository GitHub Actions | $0 | $0 | $0 | N/A | All 5 jobs in run 40172396157 completed; artifact count 0; no GPU or persistent volume | Sanitizer probes and Linux validation |
 
-| Chunk 06 | 2026-10-25 | Local CPU; standard public Linux CI planned | $0 | $0 | $0 | N/A | 108 local benchmark processes completed; no GPU or persistent cloud resource | Request growth tests and paired host-memory/time comparison |
+| Chunk 06 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | 108 local processes and all 5 jobs in run 40232916754 completed; artifact count 0; no GPU | Request growth tests and paired host-memory/time comparison |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 

@@ -149,11 +149,16 @@ It does not resolve the Mac's pre-main failure, add device coverage, or claim a
 performance improvement. The follow-up documentation commit changes no code,
 tests, build configuration, or workflow relative to the tested source above.
 
-## Chunk 06 local validation
+## Chunk 06 validation
 
 The four new request-growth tests increase the current matrix to 73 normal and
 74 sanitized checks. Debug/Release/UBSan passed locally; the updated comparison
 harness's negative-path checks also passed. Existing model tests remain unchanged.
 The historical chunk 05 runs above retain their original 69/70 counts. Chunk 06
-Linux execution is pending at its implementation commit. Performance evidence is
+[Linux run 40232916754](https://github.com/BIN0806/GPU-Inference/actions/runs/40232916754) completed successfully at
+[`d0ad3a8`](https://github.com/BIN0806/GPU-Inference/commit/d0ad3a8b459fa52ce1cfa16964a7b783b485eafb): 73/73 in
+Debug and Release, 74/74 in ASan, UBSan, and combined. All preflight probes and
+flag audits passed. GCC 13.3.0, Ubuntu 24.04 image `20261023.334.3`, CMake 3.31.6,
+Ninja 1.13.2, Python 3.12.3. No compiler warnings or unexpected sanitizer reports
+appeared in the retained logs. All jobs completed; artifact count was zero. Performance evidence is
 kept separate in [EXP-0003](experiments/0003-request-table-growth.md).

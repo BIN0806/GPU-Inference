@@ -1,7 +1,6 @@
 # EXP-0003 — Request-table reuse versus full candidate reconstruction
 
-Date: 2026-10-25, America/Los_Angeles. Status: measured; local correctness passed;
-Linux sanitizer validation pending. Engineering log: entry 0010.
+Date: 2026-10-25, America/Los_Angeles. Status: measured; local and Linux correctness/sanitizer checks passed. Engineering log: entry 0010.
 Decision: [ADR 0007](../decisions/0007-request-table-growth.md).
 
 ## Hypothesis and falsification
@@ -16,7 +15,7 @@ outcomes or physical accounting would invalidate the timing comparison entirely.
 ## Baseline, candidate, and correctness
 
 Baseline: commit `7e820180a242b39a2a2082f6a28a395d207fef7d`, full candidate tables.
-A Release executable was compiled and frozen before source edits. Candidate:
+A Release executable was compiled and frozen before source edits. Candidate: [`d0ad3a8`](https://github.com/BIN0806/GPU-Inference/commit/d0ad3a8b459fa52ce1cfa16964a7b783b485eafb),
 suffix rollback and geometric host storage growth, with exact source and binary
 hashes in [provenance](data/0003/provenance.json). The C++ benchmark and workload
 code are byte-identical between builds. The candidate source diff is preserved
@@ -29,8 +28,8 @@ Release pass 73 checks each; UBSan passes 74. Four new C++ tests cover spare
 capacity, logarithmic allocations/reset reuse, all suffix failure positions with
 shared ownership, and preflight ordering. The independent model tests remain
 unchanged (1,264,000 decisions per full suite). Additional Python checks reject
-mismatched work/memory and instrumented Release baselines. Linux CI is a separate
-pending gate; this experiment does not resolve the Mac's ASan runtime issue.
+mismatched work/memory and instrumented Release baselines. All five modes in [Linux CI](https://github.com/BIN0806/GPU-Inference/actions/runs/40232916754) pass
+(73 normal / 74 sanitized checks); this experiment does not resolve the Mac's ASan runtime issue.
 
 ## Environment and protocol
 
