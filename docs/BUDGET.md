@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-10-24. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
+Updated 2026-10-25. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
 
 ## Envelopes
 
@@ -28,6 +28,8 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 03 | 2026-10-23 | Local CPU only | $0 | $0 | $0 | N/A | No cloud resource provisioned | Request transactions, failure tests, and blog |
 | Chunk 04 | 2026-10-24 | Local CPU only | $0 | $0 | $0 | N/A | No remote compute/storage provisioned by this session | Accounting tests, two retained 108-run sweeps, and local plots |
 
+| Chunk 05 | 2026-10-25 | Local CPU and standard public-repository GitHub Actions | $0 | $0 | $0 | N/A | Hosted runs pending; no GPU, persistent volume, cache, or artifact upload configured | Sanitizer probes and Linux validation |
+
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
 ## Before each session
@@ -47,3 +49,18 @@ Track cash purchases and resource consumption separately. Using prepaid credit i
 - Record what the spend established. Release more budget only for an evidence-backed next experiment.
 
 Rates and availability are transient. See [research notes](RESEARCH_NOTES.md) and [roadmap section 8](../ROADMAP.md#8-gpu-cost-analysis-and-spending-strategy). Refresh the deployment quote before each purchase.
+
+## CPU CI cost boundary (verified 2026-10-25)
+
+The repository was verified public before enabling CI. GitHub states that
+standard hosted runners are free for public repositories; workflow logs and job
+summaries do not count against artifact storage. This workflow uses only the
+standard Ubuntu runner, with no Actions cache or artifact uploads. It has a
+10-minute per-job timeout, at most two concurrent matrix jobs, and cancels older
+runs on the same ref. A job guard skips execution if the repository is private.
+Larger runners, GPU services, paid storage, and a future visibility change need
+a new cost review. [GitHub Actions billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
+
+Free CI does not produce GPU performance evidence and does not release the
+first $20 rental checkpoint. Record completed hosted runs in the validation guide;
+do not describe merely queued work as completed cleanup.

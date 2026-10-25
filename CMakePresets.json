@@ -13,7 +13,10 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "BUILD_TESTING": "ON",
-        "KVLAB_ENABLE_CUDA": "OFF"
+        "KVLAB_ENABLE_CUDA": "OFF",
+        "KVLAB_SANITIZE": "OFF",
+        "KVLAB_ENABLE_ASAN": "OFF",
+        "KVLAB_ENABLE_UBSAN": "OFF"
       }
     },
     {
@@ -34,15 +37,22 @@
       "name": "asan",
       "inherits": "debug",
       "cacheVariables": {
-        "KVLAB_SANITIZE": "ON"
+        "KVLAB_ENABLE_ASAN": "ON"
       }
     },
     {
       "name": "ubsan",
       "inherits": "debug",
       "cacheVariables": {
-        "KVLAB_SANITIZE": "OFF",
-        "CMAKE_CXX_FLAGS": "-fsanitize=undefined -fno-omit-frame-pointer"
+        "KVLAB_ENABLE_UBSAN": "ON"
+      }
+    },
+    {
+      "name": "asan-ubsan",
+      "inherits": "debug",
+      "cacheVariables": {
+        "KVLAB_ENABLE_ASAN": "ON",
+        "KVLAB_ENABLE_UBSAN": "ON"
       }
     }
   ],
@@ -62,6 +72,10 @@
     {
       "name": "ubsan",
       "configurePreset": "ubsan"
+    },
+    {
+      "name": "asan-ubsan",
+      "configurePreset": "asan-ubsan"
     }
   ],
   "testPresets": [
@@ -86,7 +100,7 @@
         "outputOnFailure": true
       },
       "environment": {
-        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        "ASAN_OPTIONS": "halt_on_error=1"
       }
     },
     {
@@ -96,6 +110,17 @@
         "outputOnFailure": true
       },
       "environment": {
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    },
+    {
+      "name": "asan-ubsan",
+      "configurePreset": "asan-ubsan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "environment": {
+        "ASAN_OPTIONS": "halt_on_error=1",
         "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
       }
     }

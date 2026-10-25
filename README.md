@@ -2,7 +2,7 @@
 
 A C++/CUDA inference-components laboratory built in small, explained, testable increments: a fixed-page KV allocator, fused residual/RMSNorm, and single-layer paged decode attention.
 
-**Implemented: chunks 01–04, CPU allocator ownership and workload measurements.**
+**Implemented: chunks 01–05, CPU allocator ownership, workloads, and validation infrastructure.**
 Generation-tagged pages, checked sharing, move-only leases, and transactional
 request tables now have complete-owner memory accounting and seeded CPU replay.
 The benchmark records admission failures, page waste, metadata allocations, and
@@ -25,7 +25,18 @@ ctest --preset debug
 ./build/debug/request_state_demo
 ```
 
-The first test-enabled configure fetches a SHA-256-pinned GoogleTest archive. See [dependencies](docs/DEPENDENCIES.md) for offline configuration and a tests-disabled build. Release and sanitizer configurations use the `release`, `ubsan`, and `asan` presets. All 67 checks passed without compiler warnings in Debug, Release, and UBSan-only builds for chunk 04. After the timing refinement, the affected benchmark output-contract check passed again in all three modes. Python 3 enables that integration check; without it, CTest registers 66 checks. Combined ASan/UBSan startup remains unresolved from chunk 01 and was not rerun in this increment. Executed results and environment limitations belong in the validation record; a build configuration alone is not proof that a check passed.
+Test builds require Python 3.9+ (standard library only) and fetch a SHA-256-pinned
+GoogleTest archive. See [dependencies](docs/DEPENDENCIES.md) for offline setup and
+builds with tests disabled. Separate `release`, `asan`, `ubsan`, and `asan-ubsan`
+presets keep performance and diagnostic builds distinct. The legacy
+`KVLAB_SANITIZE=ON` option still enables both sanitizers.
+
+Chunk 05 adds compilation-flag auditing, isolated sanitizer probes, and a standard
+Linux CI matrix. Locally, Debug/Release pass 69 checks and UBSan passes 70;
+ASan runtime validation remains unresolved on this Mac. See the
+[validation guide](docs/VALIDATION.md) for executed results, configuration
+migration, exact commands, and the scope of the coverage. A configured workflow
+is not evidence of a successful hosted run.
 
 The original development directory ends in a space. Quote that path in shell commands; a fresh clone can use a conventional directory name.
 
@@ -41,7 +52,8 @@ Each completed implementation chunk has its own detailed commit. See the [chunk 
 - [Memory accounting](include/kvlab/memory_accounting.hpp): reconcile all owners, unique pages, reservation gaps, cache-only pages, and modeled KV bytes.
 - [Workload replay](include/kvlab/workload.hpp) and [benchmark CLI](bench/allocator_bench.cpp): deterministic offered events, capacity failures, PMR counters, and reproducible output.
 - [Benchmark contract](docs/BENCHMARKS.md) and [measured CPU report](docs/experiments/0002-cpu-allocator-screening.md): 108-run page-size/sharing sweep, raw-data provenance, timer limits, and charts.
-- Next: validate ASan on a functioning host and isolate request-table/primitive timing experiments before declaring Phase 1 complete.
+- [Validation guide](docs/VALIDATION.md): independent sanitizer modes, fault-detection probes, compilation audits, and Linux CI.
+- Next: finish hosted ASan validation, then isolate request-table/primitive timing experiments before declaring Phase 1 complete.
 
 Request commitment declares materialized tokens; it does not write payloads or wait for a GPU. Borrowed request handles must not be manually retained, released, or sealed. The pool and any supplied metadata memory resource must outlive the request. CPU reference count zero does not prove GPU completion.
 

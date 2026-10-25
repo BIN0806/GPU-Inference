@@ -1,0 +1,66 @@
+name: CPU validation
+
+on:
+  push:
+    branches: [main, 'codex/**']
+    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', '.github/workflows/cpu-ci.yml']
+  pull_request:
+    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', '.github/workflows/cpu-ci.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpu-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    # Reconsider the budget before running if the repository becomes private.
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        preset: [debug, release, asan, ubsan, asan-ubsan]
+    env:
+      CXX: g++
+      ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Record environment
+        run: |
+          uname -a
+          "$CXX" --version
+          cmake --version
+          ninja --version
+          python3 --version
+          printf 'Runner image: %s %s\n' "$ImageOS" "$ImageVersion"
+      - name: Configure
+        run: cmake --preset "${{ matrix.preset }}" -DPython3_EXECUTABLE="$(command -v python3)"
+      - name: Build
+        run: cmake --build --preset "${{ matrix.preset }}" --parallel 2
+      - name: Check instrumentation and runtime
+        # Direct invocation precedes GoogleTest discovery, isolating startup failures.
+        run: |
+          preset='${{ matrix.preset }}'
+          case "$preset" in
+            asan) sanitizers=address ;;
+            ubsan) sanitizers=undefined ;;
+            asan-ubsan) sanitizers=address,undefined ;;
+            *) sanitizers=none ;;
+          esac
+          python3 scripts/check_sanitizer_flags.py --source-dir . --build-dir "build/$preset" --expected "$sanitizers"
+          if [ "$sanitizers" != none ]; then
+            python3 tests/sanitizer_runtime_test.py "build/$preset/sanitizer_probe" --sanitizers "$sanitizers" --log-dir "build/$preset/preflight-logs"
+          fi
+      - name: Run complete CPU suite
+        # Use the build tree directly so preset environments cannot replace leak settings.
+        run: ctest --test-dir "build/${{ matrix.preset }}" --output-on-failure --timeout 120

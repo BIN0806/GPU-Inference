@@ -7,7 +7,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 option(KVLAB_ENABLE_CUDA "Build CUDA components (not implemented yet)" OFF)
-option(KVLAB_SANITIZE "Enable host AddressSanitizer and UndefinedBehaviorSanitizer" OFF)
+option(KVLAB_SANITIZE "Legacy alias: enable both host sanitizers" OFF)
+option(KVLAB_ENABLE_ASAN "Enable host AddressSanitizer" OFF)
+option(KVLAB_ENABLE_UBSAN "Enable host UndefinedBehaviorSanitizer" OFF)
 set(KVLAB_GTEST_ARCHIVE "" CACHE FILEPATH "Optional local copy of the pinned GoogleTest archive")
 
 if(KVLAB_ENABLE_CUDA)
@@ -18,12 +20,21 @@ add_library(kvlab_options INTERFACE)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
   target_compile_options(kvlab_options INTERFACE -Wall -Wextra -Wpedantic)
 endif()
-if(KVLAB_SANITIZE)
+set(kvlab_sanitizers "")
+if(KVLAB_ENABLE_ASAN OR KVLAB_SANITIZE)
+  list(APPEND kvlab_sanitizers address)
+endif()
+if(KVLAB_ENABLE_UBSAN OR KVLAB_SANITIZE)
+  list(APPEND kvlab_sanitizers undefined)
+endif()
+if(kvlab_sanitizers)
   if(NOT CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" OR WIN32)
-    message(FATAL_ERROR "KVLAB_SANITIZE currently supports Clang/GCC on macOS/Linux.")
+    message(FATAL_ERROR "Host sanitizers currently support Clang/GCC on macOS/Linux.")
   endif()
-  target_compile_options(kvlab_options INTERFACE -fsanitize=address,undefined -fno-omit-frame-pointer)
-  target_link_options(kvlab_options INTERFACE -fsanitize=address,undefined)
+  list(JOIN kvlab_sanitizers "," kvlab_sanitizer_flags)
+  target_compile_options(kvlab_options INTERFACE
+    "-fsanitize=${kvlab_sanitizer_flags}" -fno-omit-frame-pointer)
+  target_link_options(kvlab_options INTERFACE "-fsanitize=${kvlab_sanitizer_flags}")
 endif()
 
 add_library(kvlab_allocator STATIC src/allocator/page_pool.cpp src/allocator/page_lease.cpp
@@ -69,11 +80,27 @@ if(BUILD_TESTING)
   add_executable(workload_test tests/memory_accounting_test.cpp tests/workload_test.cpp)
   target_link_libraries(workload_test PRIVATE kvlab_workload GTest::gtest_main)
   gtest_discover_tests(workload_test DISCOVERY_MODE PRE_TEST)
-  find_package(Python3 COMPONENTS Interpreter QUIET)
-  if(Python3_Interpreter_FOUND)
-    add_test(NAME BenchmarkOutputContract COMMAND "${Python3_EXECUTABLE}"
-      "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_output_test.py" "$<TARGET_FILE:allocator_bench>")
+  # Test tooling is required so an absent interpreter cannot silently remove checks.
+  find_package(Python3 3.9 COMPONENTS Interpreter REQUIRED)
+  add_test(NAME BenchmarkOutputContract COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_output_test.py" "$<TARGET_FILE:allocator_bench>")
+  add_test(NAME ValidationTools COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/tests/validation_tools_test.py")
+  set(kvlab_expected_sanitizers "none")
+  if(kvlab_sanitizers)
+    set(kvlab_expected_sanitizers "${kvlab_sanitizer_flags}")
+    add_executable(sanitizer_probe tests/sanitizer_probe.cpp)
+    target_link_libraries(sanitizer_probe PRIVATE kvlab_options)
+    add_test(NAME SanitizerRuntime COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/tests/sanitizer_runtime_test.py"
+      "$<TARGET_FILE:sanitizer_probe>" --sanitizers "${kvlab_sanitizer_flags}"
+      --log-dir "${CMAKE_CURRENT_BINARY_DIR}/sanitizer-logs")
+    set_tests_properties(SanitizerRuntime PROPERTIES TIMEOUT 70)
   endif()
+  add_test(NAME SanitizerCompileFlags COMMAND "${Python3_EXECUTABLE}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/scripts/check_sanitizer_flags.py"
+    --source-dir "${CMAKE_CURRENT_SOURCE_DIR}" --build-dir "${CMAKE_CURRENT_BINARY_DIR}"
+    --expected "${kvlab_expected_sanitizers}")
   add_test(NAME PagePoolDemo COMMAND page_pool_demo)
   add_test(NAME SharedPrefixDemo COMMAND shared_prefix_demo)
   add_test(NAME RequestStateDemo COMMAND request_state_demo)

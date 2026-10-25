@@ -358,6 +358,66 @@ before calling Phase 1 complete. Infrastructure spending remains $0; this
 session installed only optional plotting packages in an isolated local environment.
 
 
+## Entry 0009 — 2026-10-25 — Can the sanitizer gate actually detect a fault?
+
+**State:** implemented; local Debug/Release/UBSan tested; hosted run pending.
+
+### Question and decision
+
+Chunk 04 left ASan validation unresolved. Before optimizing request-table growth,
+establish whether the instrumentation and host runtime can detect known faults.
+The hypothesis is that a separate Linux runtime can validate the unchanged CPU
+allocator even while this Mac's ASan probe remains unresolved. A Linux failure
+would require diagnosis, not suppression or a claimed pass.
+
+Split ASan and UBSan switches, retain the legacy combined alias, and add a
+combined preset. Require Python for test-enabled builds so the CLI contract and
+new checks cannot disappear silently. The alternative of paying for a GPU just
+to test CPU metadata was unnecessary. [ADR 0006](decisions/0006-sanitizer-validation.md)
+records the configuration, trust, and cost tradeoffs.
+
+### Implementation and checks so far
+
+CMake applies compile/link instrumentation through the existing interface target.
+A compilation-database audit checks every first-party translation unit. A separate
+probe executable exercises a clean allocation, deliberate heap bounds violation,
+and deliberate signed overflow; the Python parent checks exact diagnostic classes,
+exit behavior, and timeouts. Regression cases reject missing flags, unexpected
+flags, disabling overrides, absent compilation entries, generic crashes,
+recovered faults, and timeouts. These faults exist only in the test executable.
+No allocator or workload algorithm changed.
+
+Fresh local Debug/Release suites passed 69/69; UBSan passed 70/70. All five modes
+built without compiler warnings and passed instrumentation audits. ASan-only
+and combined clean probes timed out at 20 seconds, preserving the local limitation.
+Adding a flushed stderr marker at entry to `main` produced the same bounded
+timeout with empty stdout/stderr in both ASan modes. The marker was not reached;
+this narrows the symptom but does not diagnose the initialization failure. The
+refined UBSan probe and its audit/tooling regressions then passed 3/3. A
+tests-disabled Release build ran benchmark help, and the legacy sanitizer alias
+built its probe with both compile/link flags and passed its compilation audit.
+CMake selected Python 3.14.8; directly invoked scripts used Python 3.14.0 from
+the shell. Logs are retained in ignored `artifacts/validation/chunk-05/`. No performance
+result is inferred from these checks. The existing model suites still cover
+1,264,000 decisions per full execution.
+
+### Hosted execution and cost
+
+Added a five-mode standard Ubuntu CI matrix with bounded jobs, read-only access,
+immutable checkout revision, and no cache/artifact uploads. Verified the target
+repository is public and Actions enabled; verified the applicable free standard
+runner policy. Hosted execution is pending at this implementation stage.
+[The validation record](VALIDATION.md) will identify actual runs and source SHAs.
+Infrastructure spend remains $0; no GPU rental was provisioned. The initial
+$20 GPU checkpoint is unchanged.
+
+### Learning and next action
+
+A configured sanitizer is not a proven detector, and a detector is not a proof
+of application correctness. Keep configuration, host runtime, and allocator
+behavior as separately observable checks. Complete Linux validation, retain the
+local failure, then return to the Phase 1 timing and request-table decision.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

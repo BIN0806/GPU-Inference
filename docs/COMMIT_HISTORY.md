@@ -8,6 +8,7 @@ The repository preserves independently buildable implementation chunks:
 | 02 | `feat(allocator): add sealed-page sharing and RAII leases (chunk 02)` | 32/32 |
 | 03 | `feat(allocator): add transactional request tables (chunk 03)` | 52/52 |
 | 04 | `feat(bench): add CPU workload replay and memory accounting (chunk 04)` | 67/67; affected CLI check repeated after timing refinement |
+| 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally; UBSan 70/70; hosted results in the validation guide |
 
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to
@@ -38,8 +39,9 @@ The [engineering log](ENGINEERING_LOG.md) records executed configurations,
 results, failure investigations, and limitations. Fresh isolated Debug builds
 passed 12/32/52 checks during initial publication preparation. Those independent
 builds ran concurrently; their durations are not performance measurements.
-Release and UBSan results are the earlier recorded runs. ASan startup remains
-unresolved, and no CI, GPU, or performance result is claimed.
+Release and UBSan results are the earlier recorded runs. Those initial history checks did not establish ASan or CI coverage. Current
+CPU validation is recorded in [the validation guide](VALIDATION.md); chunk 04
+adds CPU performance data. No GPU result is claimed.
 
 Blog articles and their raw evidence remain only in the original local ignored
 directory. They are absent from every commit in the rewritten published history
