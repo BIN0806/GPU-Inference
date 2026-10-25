@@ -166,3 +166,47 @@ overhead, allocator speedup over another implementation, or serving throughput.
 Next experiments should isolate batch-timed page primitives and compare an
 alternative request-table growth strategy under equivalent semantics. Repeat
 ASan on a working host before declaring Phase 1's sanitizer gate complete.
+
+## Comparing request-growth implementations (chunk 06)
+
+`compare_allocator_variants.py` runs adjacent baseline/candidate processes in
+randomized order, with a randomized order of workload pairs. It accepts two
+Release binaries plus their adjacent `CMakeCache.txt` and `compile_commands.json`.
+The compilation database must contain no sanitizer flags. Both executables must
+use the same schema-2 C++ harness. The baseline is preserved at commit `7e82018`;
+keep its executable separate so rebuilding the candidate cannot replace it.
+
+```sh
+python3 scripts/compare_allocator_variants.py \
+  --baseline /path/to/frozen-baseline/allocator_bench \
+  --candidate build/release/allocator_bench \
+  --baseline-source-manifest /path/to/baseline-source-sha256.json \
+  --output artifacts/request-growth-comparison
+```
+
+The source manifest maps repository-relative files to SHA-256 hashes from the
+baseline checkout. Create it when building that binary and freeze it alongside
+the cache/compilation database. The runner records the candidate source hashes,
+both executable hashes, source diff, tool configuration, exact schedule, commands,
+and pre-run load averages. These record the supplied build provenance; a source
+manifest alone cannot establish that an arbitrary executable came from it.
+
+Defaults: 3 page sizes (8/16/64), 2 offered sharing percentages (0/90), 3 seeds
+(7/17/29), 3 repeats, 20,000 events: 54 pairs / 108 fresh-process runs. Pool slots
+remain 4096 tokens, 32 request slots, max request 1024 tokens, prefix 128 tokens,
+and sampling every 128 events. Each child has a 120-second limit. Failure logs
+and incomplete manifests are retained; output directories must be new.
+
+For each pair, require matching configuration, outcome counts, every offered
+event and its outcome, and the entire sampled physical-memory CSV. Timing and
+host PMR counters may differ. Save allocation calls, requested/peak/retained host
+bytes, and aggregate ns/offered event in `pairs.csv`. No timing threshold is a
+CI gate. Inspect paired ratios and absolute times with all repeats/outliers;
+seeds/repeats are not independent production traffic or service latency samples.
+Host resource counters remain inside the measured replay in both variants.
+
+Geometric table growth can add physical pages without allocating host storage.
+Accordingly the older single-variant runner now calls its append groups
+`append_with_metadata_allocation` and `append_without_metadata_allocation`.
+Historical CSVs retain their original column names; the C++ raw schema remains
+unchanged. An absence of PMR allocation no longer implies "within one page."

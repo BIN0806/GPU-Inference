@@ -1,4 +1,4 @@
-# Dependencies for the CPU implementation (through chunk 05)
+# Dependencies for the CPU implementation (through chunk 06)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -74,3 +74,8 @@ The action tag and commit were checked on 2026-10-25. Updating it is a reviewed
 source change. Checkout does not persist credentials; jobs have read-only
 repository access and receive no project secrets. See [ADR 0006](decisions/0006-sanitizer-validation.md)
 and [the budget ledger](BUDGET.md) for the rationale and cost boundary.
+
+Chunk 06 adds no dependency. The paired comparison uses Python's standard library;
+its optional plotting script uses the existing Matplotlib lock. Both measured
+binaries were built with Apple Clang 17 / libc++ 200100 on an Apple M3 Pro. Compiler
+and source provenance are linked from [EXP-0003](experiments/0003-request-table-growth.md).

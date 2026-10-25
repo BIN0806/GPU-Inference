@@ -50,7 +50,7 @@ def main():
                         if row["outcome"] == "appended" and (int(row["metadata_allocations"]) > 0) == allocated)
         if values:
             ax.step(values, [(i + 1) / len(values) for i in range(len(values))], where="post",
-                    label=f"{'with allocation' if allocated else 'within page'} (n={len(values)})")
+                    label=f"{'with metadata allocation' if allocated else 'without metadata allocation'} (n={len(values)})")
     ax.set(xlabel="Observed CPU append duration (ns, timer included)", ylabel="Empirical cumulative fraction",
            xscale="symlog", title=f"One run: {chosen['run']}")
     ax.legend()

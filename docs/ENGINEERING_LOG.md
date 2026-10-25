@@ -439,6 +439,70 @@ no GPU was provisioned, and no performance experiment was rerun. The next useful
 engineering question is still request-table metadata growth and batched primitive
 timing; this validation increment alone does not declare all of Phase 1 complete.
 
+## Entry 0010 — 2026-10-25 — Reuse request metadata without weakening logical rollback
+
+**State:** implemented, locally tested and measured; Linux CI pending.
+
+### Hypothesis and boundary
+
+The current candidate-table reservation allocates and moves the entire table on
+page growth. Chunk 04 observed substantial PMR allocation counts. Reusing a
+geometrically grown vector should reduce those calls, especially after reset,
+but can retain more host memory and need not improve every workload's timing.
+A baseline executable from `7e82018` was built and frozen before modifying code.
+The C++ benchmark harness and workload trace remain identical between binaries.
+
+### Decision and implementation
+
+Preflight pool capacity; grow host storage with checked doubling; append empty
+leases; acquire only the new suffix; on failure pop that suffix; publish reserved
+length only after success. PageLease moves/default construction/destruction are
+noexcept and now asserted at compile time. Existing handles, lengths, references,
+and physical-page capacity roll back. Successful host growth can survive a later
+page-acquisition failure. Generation/free-list history remains outside rollback.
+Prefix sharing and move assignment retain their original candidate transactions.
+
+Added regressions for allocation-free page-boundary growth, logarithmic host
+allocation count, reset reuse, pool exhaustion before host allocation, and failure
+at every suffix position with a shared prefix. The failure tests explicitly
+verify retained host capacity and allocation-free retry. The existing independent
+models remain unchanged. Corrected reporting labels: no metadata allocation no
+longer implies an append stayed within one physical page.
+
+### Planned experiment and gates
+
+Run all relevant local configurations, then compare adjacent randomized-order
+baseline/candidate processes with identical offered traces. Require exact event
+outcomes and sampled physical-memory accounting, while measuring PMR calls,
+retained/peak host bytes, and whole-trace mean time. Preserve every repeat and
+outlier. Linux ASan/UBSan CI must pass before integration. No performance claim
+or GPU provisioning is justified at this stage; infrastructure spend remains $0.
+
+### Executed evidence and diagnosis
+
+Local Debug/Release each passed 73 checks and UBSan passed 74, without compiler
+warnings. The comparison harness regression check passed after adding mismatch
+and instrumented-build rejection cases. All 54 pairs in EXP-0003 matched every
+offered event/outcome and sampled physical-memory row. No run was discarded.
+[The report](experiments/0003-request-table-growth.md) links all 54 observations,
+source/binary/configuration hashes, and a rendered/inspected tradeoff chart.
+
+At P=16 with 0% sharing, median PMR calls fell 3,106 → 102; paired time ratio
+median was 0.754, while retained bytes rose 18,288 → 70,608. At P=64 with 90%
+sharing, every paired ratio exceeded 1 (median 1.018). Preserve this regression;
+the experiment does not isolate its microarchitectural cause. The unchanged
+prefix transaction limits reuse in high-sharing cases. Keep the optimization
+for this lab's growth-heavy workloads, expose retained memory, and retain the
+baseline commit for workloads prioritizing host memory or matching the regression.
+
+No allocator defect was encountered in local validation. Review identified a
+reporting issue: the old no-allocation group was called "within page," which is
+now false. Renamed those runner columns/plot labels without changing the C++ raw
+schema or timing boundary. The CPU model query initially failed in the restricted
+command environment; a read-only retry identified Apple M3 Pro. No configuration
+was changed. macOS ASan remains the previously documented environment limitation;
+Linux sanitizer coverage of this new source is the next gate. Cost remains $0.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

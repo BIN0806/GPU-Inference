@@ -9,11 +9,11 @@ first question partially; a generic crash is not a passing fault-detection test.
 
 | Preset | Configuration | Expected sanitizer set | Registered checks |
 |---|---|---|---:|
-| `debug` | Debug | none | 69 |
-| `release` | Release | none | 69 |
-| `asan` | Debug | address | 70 |
-| `ubsan` | Debug | undefined | 70 |
-| `asan-ubsan` | Debug | address, undefined | 70 |
+| `debug` | Debug | none | 73 |
+| `release` | Release | none | 73 |
+| `asan` | Debug | address | 74 |
+| `ubsan` | Debug | undefined | 74 |
+| `asan-ubsan` | Debug | address, undefined | 74 |
 
 `KVLAB_ENABLE_ASAN` and `KVLAB_ENABLE_UBSAN` independently select instrumentation.
 `KVLAB_SANITIZE=ON` remains a legacy alias for both. All presets explicitly clear
@@ -148,3 +148,12 @@ This closes the missing Linux ASan execution gate for the current CPU source.
 It does not resolve the Mac's pre-main failure, add device coverage, or claim a
 performance improvement. The follow-up documentation commit changes no code,
 tests, build configuration, or workflow relative to the tested source above.
+
+## Chunk 06 local validation
+
+The four new request-growth tests increase the current matrix to 73 normal and
+74 sanitized checks. Debug/Release/UBSan passed locally; the updated comparison
+harness's negative-path checks also passed. Existing model tests remain unchanged.
+The historical chunk 05 runs above retain their original 69/70 counts. Chunk 06
+Linux execution is pending at its implementation commit. Performance evidence is
+kept separate in [EXP-0003](experiments/0003-request-table-growth.md).

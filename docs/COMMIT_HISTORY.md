@@ -9,6 +9,7 @@ The repository preserves independently buildable implementation chunks:
 | 03 | `feat(allocator): add transactional request tables (chunk 03)` | 52/52 |
 | 04 | `feat(bench): add CPU workload replay and memory accounting (chunk 04)` | 67/67; affected CLI check repeated after timing refinement |
 | 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally and Linux; all 3 Linux sanitizer modes 70/70 |
+| 06 | `perf(allocator): reuse request-table storage with suffix rollback (chunk 06)` | 73/73 local Debug/Release; UBSan 74/74; paired measurements recorded |
 
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to

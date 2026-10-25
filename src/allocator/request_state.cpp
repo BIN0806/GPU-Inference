@@ -1,12 +1,18 @@
 #include "kvlab/request_state.hpp"
 
+#include <algorithm>
 #include <exception>
 #include <set>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 
 namespace kvlab {
 namespace {
+
+static_assert(std::is_nothrow_move_constructible_v<PageLease>);
+static_assert(std::is_nothrow_default_constructible_v<PageLease>);
+static_assert(std::is_nothrow_destructible_v<PageLease>);
 
 std::pmr::memory_resource* checked_resource(std::pmr::memory_resource* resource) {
   if (resource == nullptr) {
@@ -67,20 +73,36 @@ RequestStatus RequestState::reserve_for_length(std::size_t target) {
     reserved_length_ = target;
     return RequestStatus::Ok;
   }
-  Table candidate{pages_.get_allocator().resource()};
-  candidate.resize(needed);  // Host allocation first; existing table stays untouched.
-  for (std::size_t i = pages_.size(); i < needed; ++i) {
-    auto acquired = PageLease::try_allocate(*pool_);
-    if (!acquired) {
-      return RequestStatus::PoolExhausted;
+  const auto old_size = pages_.size();
+  if (needed > pages_.capacity()) {
+    const auto limit = std::min(pages_.max_size(), pool_->stats().capacity);
+    if (needed > limit) {
+      throw std::length_error("Request page table exceeds metadata capacity");
     }
-    candidate[i] = std::move(*acquired);
+    // Bound the requested growth and avoid overflowing the doubling expression.
+    const auto doubled = pages_.capacity() > limit / 2 ? limit : pages_.capacity() * 2;
+    pages_.reserve(std::max(needed, doubled));
   }
-  // No throwing work remains. Existing owners move only at this commit point.
-  for (std::size_t i = 0; i < pages_.size(); ++i) {
-    candidate[i] = std::move(pages_[i]);
+  // No allocation/default-construction failure remains. Only the new suffix is
+  // provisional; relocating noexcept leases above preserves their pool ownership.
+  pages_.resize(needed);
+  const auto rollback = [&]() noexcept {
+    while (pages_.size() > old_size) pages_.pop_back();
+  };
+  try {
+    for (std::size_t i = old_size; i < needed; ++i) {
+      auto acquired = PageLease::try_allocate(*pool_);
+      if (!acquired) {
+        rollback();
+        return RequestStatus::PoolExhausted;
+      }
+      pages_[i] = std::move(*acquired);
+    }
+  } catch (...) {
+    rollback();
+    throw;
   }
-  pages_.swap(candidate);
+  // Publication point: the single-threaded caller cannot observe the suffix mid-call.
   reserved_length_ = target;
   return RequestStatus::Ok;
 }

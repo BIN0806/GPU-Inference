@@ -113,7 +113,7 @@ def main():
             for allocated in (False, True):
                 group = next((g for g in summary["latency_by_operation_and_outcome"]
                               if g["outcome"] == "appended" and g["metadata_allocated"] == allocated), None)
-                label = "append_growth" if allocated else "append_within_page"
+                label = "append_with_metadata_allocation" if allocated else "append_without_metadata_allocation"
                 row[label + "_p50_ns"] = group["p50_ns"] if group else ""
                 row[label + "_p95_ns"] = group["p95_ns"] if group else ""
                 row[label + "_samples"] = group["count"] if group else 0

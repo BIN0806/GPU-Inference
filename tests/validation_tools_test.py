@@ -16,9 +16,52 @@ def load(relative):
 
 flags = load("scripts/check_sanitizer_flags.py")
 runtime = load("tests/sanitizer_runtime_test.py")
+comparison = load("scripts/compare_allocator_variants.py")
 
 
 class ValidationToolsTest(unittest.TestCase):
+    def test_variant_comparison_rejects_changed_work_and_memory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = [Path(directory) / name for name in ("baseline", "candidate")]
+            summary = dict(schema_version=2, measurement="cpu_metadata_event", config={},
+                           kv_model={}, warmup_events=0, outcomes={"admitted": 1},
+                           live_pages_before_drain=1, free_pages_after_drain=1,
+                           build_type="Release")
+            events = ("index,kind,slot,tokens,share_draw,outcome,elapsed_ns,metadata_allocations\n"
+                      "0,admit,0,1,0,admitted,42,1\n")
+            for path in (first, second):
+                path.mkdir()
+                (path / "summary.json").write_text(json.dumps(summary))
+                (path / "events.csv").write_text(events)
+                (path / "memory.csv").write_text("same physical accounting\n")
+            # Timing/allocation differences are allowed, but not different accepted work.
+            (second / "events.csv").write_text(events.replace(",42,1\n", ",17,0\n"))
+            comparison.compare_outputs(first, second)
+            (second / "events.csv").write_text(events.replace(",admitted,", ",skipped,"))
+            with self.assertRaises(ValueError):
+                comparison.compare_outputs(first, second)
+            (second / "events.csv").write_text(events)
+            (second / "memory.csv").write_text("different accounting\n")
+            with self.assertRaises(ValueError):
+                comparison.compare_outputs(first, second)
+            (second / "memory.csv").write_text("same physical accounting\n")
+            (second / "summary.json").write_text(json.dumps(summary | dict(config={"events": 2})))
+            with self.assertRaises(ValueError):
+                comparison.compare_outputs(first, second)
+
+    def test_variant_comparison_rejects_instrumented_release_binary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            binary = root / "allocator_bench"
+            binary.write_text("fixture only")
+            (root / "CMakeCache.txt").write_text("CMAKE_BUILD_TYPE:STRING=Release\n")
+            database = root / "compile_commands.json"
+            database.write_text(json.dumps([dict(arguments=["c++", "-O3"])]))
+            comparison.inspect_build(binary)
+            database.write_text(json.dumps([dict(arguments=["c++", "-O3", "-fsanitize=address"])]))
+            with self.assertRaises(ValueError):
+                comparison.inspect_build(binary)
+
     def test_runtime_rejects_generic_crash_timeout_and_recovered_fault(self):
         marker = "AddressSanitizer: heap-buffer-overflow"
         record = dict(returncode=1, stdout="", stderr=marker, timed_out=False)

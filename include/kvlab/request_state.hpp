@@ -35,6 +35,8 @@ class RequestState {
   // Does not commit tokens. bad_alloc/length_error/generation overflow may propagate.
   // On failure, existing handles, lengths, and ownership are unchanged. Briefly
   // acquired/free pages may have advanced generations or a different free-list order.
+  // Host table capacity may grow even when later page acquisition fails; it is
+  // retained across reset for reuse. A metadata allocation failure has no effects.
   [[nodiscard]] RequestStatus reserve_for_length(std::size_t target);
   // Caller attests data through target has been materialized; does not write payloads
   // or wait for a GPU. Rejects shrinking or exceeding the reserved length.

@@ -175,6 +175,117 @@ TEST(RequestState, PartialAcquisitionExceptionRollsBackLeasesButNotGenerations) 
   EXPECT_EQ(request.reserve_for_length(9), RequestStatus::Ok);
 }
 
+TEST(RequestState, PageBoundaryGrowthReusesSpareMetadataCapacity) {
+  PagePool pool(8, 4);
+  test::FailingResource resource;
+  kvlab::RequestState request(pool, &resource);
+  for (const auto length : {1U, 5U, 9U}) {
+    ASSERT_EQ(request.reserve_for_length(length), RequestStatus::Ok);
+    ASSERT_EQ(request.commit_length(length), RequestStatus::Ok);
+  }
+  const auto before = snapshot(request);
+  const auto allocations = resource.allocations;
+  resource.fail_next = true;
+  EXPECT_EQ(request.reserve_for_length(13), RequestStatus::Ok);
+  EXPECT_EQ(request.commit_length(13), RequestStatus::Ok);
+  EXPECT_EQ(resource.allocations, allocations);
+  EXPECT_TRUE(resource.fail_next);  // A new physical page needs no new host allocation.
+  for (std::size_t i = 0; i < before.handles.size(); ++i) {
+    EXPECT_EQ(request.page_handle(i)->id, before.handles[i].first);
+    EXPECT_EQ(request.page_handle(i)->generation, before.handles[i].second);
+  }
+  EXPECT_NO_THROW(request.validate_invariants());
+  resource.fail_next = false;
+}
+
+TEST(RequestState, RepeatedGrowthHasLogarithmicAllocationCountAndResetReusesStorage) {
+  PagePool pool(64, 4);
+  test::FailingResource resource;
+  {
+    kvlab::RequestState request(pool, &resource);
+    for (std::size_t pages = 1; pages <= 64; ++pages) {
+      ASSERT_EQ(request.reserve_for_length(pages * 4), RequestStatus::Ok);
+      ASSERT_EQ(request.commit_length(pages * 4), RequestStatus::Ok);
+      request.validate_invariants();
+    }
+    // reserve may grant more than requested; do not require exact implementation capacity.
+    EXPECT_LE(resource.allocations, 7U);  // Requests of 1,2,4,8,16,32,64 entries at most.
+    const auto calls = resource.allocations;
+    const auto retained = resource.outstanding_bytes;
+    request.reset();
+    EXPECT_EQ(pool.stats().free_pages, 64U);
+    EXPECT_EQ(resource.outstanding_bytes, retained);
+    resource.fail_next = true;
+    ASSERT_EQ(request.reserve_for_length(256), RequestStatus::Ok);
+    EXPECT_EQ(resource.allocations, calls);
+    EXPECT_TRUE(resource.fail_next);
+    EXPECT_EQ(request.length(), 0U);
+    EXPECT_NO_THROW(request.validate_invariants());
+    resource.fail_next = false;
+  }
+  EXPECT_EQ(resource.outstanding_bytes, 0U);
+  EXPECT_EQ(pool.stats().free_pages, 64U);
+}
+
+TEST(RequestState, SuffixFailureAtEveryAcquisitionPreservesSharedPrefixAndRetryCapacity) {
+  for (std::size_t fail_at = 0; fail_at < 4; ++fail_at) {
+    SCOPED_TRACE(fail_at);
+    PagePool pool(8, 4);
+    test::FailingResource resource;
+    kvlab::RequestState source(pool), child(pool, &resource);
+    ASSERT_EQ(source.reserve_for_length(8), RequestStatus::Ok);
+    ASSERT_EQ(source.commit_length(8), RequestStatus::Ok);
+    ASSERT_EQ(child.share_prefix_from(source, 2), RequestStatus::Ok);
+    const auto before = snapshot(child);
+    const auto bytes_before = resource.outstanding_bytes;
+    const auto fail_id = detail::PagePoolTestAccess::next_free_id(pool, fail_at);
+    detail::PagePoolTestAccess::set_free_generation(
+        pool, fail_id, std::numeric_limits<std::uint64_t>::max());
+    EXPECT_THROW(static_cast<void>(child.reserve_for_length(24)), std::overflow_error);
+    EXPECT_TRUE(snapshot(child) == before);
+    EXPECT_EQ(pool.stats().free_pages, 6U);
+    for (std::size_t i = 0; i < 2; ++i) {
+      EXPECT_EQ(pool.inspect(*child.page_handle(i))->references, 2U);
+      EXPECT_TRUE(pool.inspect(*child.page_handle(i))->sealed);
+    }
+    EXPECT_GT(resource.outstanding_bytes, bytes_before);  // Logical rollback retains capacity.
+    EXPECT_NO_THROW(child.validate_invariants());
+    EXPECT_NO_THROW(pool.validate_invariants());
+    detail::PagePoolTestAccess::set_free_generation(pool, fail_id, 0);
+    const auto calls = resource.allocations;
+    resource.fail_next = true;
+    ASSERT_EQ(child.reserve_for_length(24), RequestStatus::Ok);
+    ASSERT_EQ(child.commit_length(24), RequestStatus::Ok);
+    EXPECT_EQ(resource.allocations, calls);
+    EXPECT_TRUE(resource.fail_next);
+    resource.fail_next = false;
+    child.reset();
+    EXPECT_EQ(pool.stats().free_pages, 6U);
+    EXPECT_EQ(pool.inspect(*source.page_handle(0))->references, 1U);
+  }
+}
+
+TEST(RequestState, ExhaustedPoolDoesNotGrowOrConsumeHostAllocationFailure) {
+  PagePool pool(2, 4);
+  test::FailingResource resource;
+  kvlab::RequestState request(pool, &resource);
+  ASSERT_EQ(request.reserve_for_length(1), RequestStatus::Ok);
+  auto blocker = PageLease::try_allocate(pool);
+  ASSERT_TRUE(blocker);
+  const auto before = snapshot(request);
+  const auto bytes = resource.outstanding_bytes;
+  resource.fail_next = true;
+  EXPECT_EQ(request.reserve_for_length(5), RequestStatus::PoolExhausted);
+  EXPECT_TRUE(snapshot(request) == before);
+  EXPECT_EQ(resource.outstanding_bytes, bytes);
+  EXPECT_TRUE(resource.fail_next);
+  blocker->reset();
+  EXPECT_THROW(static_cast<void>(request.reserve_for_length(5)), std::bad_alloc);
+  EXPECT_TRUE(snapshot(request) == before);
+  EXPECT_EQ(pool.stats().free_pages, 1U);
+  EXPECT_EQ(request.reserve_for_length(5), RequestStatus::Ok);
+}
+
 TEST(RequestState, PrefixSharingKeepsPartialTailsIndependent) {
   PagePool pool(4, 4);
   kvlab::RequestState source(pool), child(pool);

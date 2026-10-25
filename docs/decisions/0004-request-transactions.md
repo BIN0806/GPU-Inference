@@ -2,6 +2,10 @@
 
 Date: 2026-10-23. Status: implemented; all 52 checks passed in Debug, Release, and UBSan-only builds. ASan remains open.
 
+The growth path below describes the original chunk 03 baseline.
+[ADR 0007](0007-request-table-growth.md) updates growth and retained-capacity
+semantics in chunk 06; sharing and move assignment still follow this record.
+
 ## Contract
 
 A move-only `RequestState` borrows one PagePool and owns an ordered table of PageLease entries. Page IDs within a request are distinct. `reserved_length` bounds planned capacity; `length` counts committed tokens. The table contains exactly ceil(reserved_length / tokens_per_page) entries, possibly including uncommitted pages. Only fully committed pages are sealed. Any remaining partial tail or reserved page is uniquely owned and writable.
