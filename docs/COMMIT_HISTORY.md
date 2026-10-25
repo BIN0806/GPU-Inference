@@ -8,7 +8,7 @@ The repository preserves independently buildable implementation chunks:
 | 02 | `feat(allocator): add sealed-page sharing and RAII leases (chunk 02)` | 32/32 |
 | 03 | `feat(allocator): add transactional request tables (chunk 03)` | 52/52 |
 | 04 | `feat(bench): add CPU workload replay and memory accounting (chunk 04)` | 67/67; affected CLI check repeated after timing refinement |
-| 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally; UBSan 70/70; hosted results in the validation guide |
+| 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally and Linux; all 3 Linux sanitizer modes 70/70 |
 
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to
@@ -62,3 +62,8 @@ GitHub caches or third-party clones. See
 Chunk 04 adds the [benchmark contract](BENCHMARKS.md) and public CPU experiment
 report. These are engineering records, maintained separately from the ignored
 local blog. Its source and result provenance are linked from the report.
+
+Chunk 05's implementation commit is followed by a documentation-only evidence
+commit recording the completed Linux run. The tested source SHA and hosted job
+links are in [the validation record](VALIDATION.md). This keeps the original
+pending state honest and adds results only after actual execution.

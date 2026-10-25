@@ -119,7 +119,32 @@ No full ASan suite is claimed locally. The earlier startup symptom is
 therefore still an open environment issue, not a diagnosed allocator failure.
 
 Local raw build/test/probe records are retained under the ignored
-`artifacts/validation/chunk-05/` directory. Hosted execution is pending at the
-implementation commit; a follow-up evidence record will link the actual run,
-source revision, toolchain, and results. No GPU resource or paid storage was
+`artifacts/validation/chunk-05/` directory. Hosted execution completed successfully in
+[run 40172396157](https://github.com/BIN0806/GPU-Inference/actions/runs/40172396157) at source
+[`a5041ec`](https://github.com/BIN0806/GPU-Inference/commit/a5041ece6e01c559161c354474239bad22ab4928). No GPU resource or paid storage was
 provisioned. No performance experiment was repeated for this build-only change.
+
+### Completed Linux matrix
+
+| Mode | Checks | Runtime preflight | Outcome |
+|---|---:|---|---|
+| Debug | 69/69 | Not instrumented | Pass |
+| Release | 69/69 | Not instrumented | Pass |
+| ASan | 70/70 | Clean + heap overflow | Pass |
+| UBSan | 70/70 | Clean + signed overflow | Pass |
+| ASan + UBSan | 70/70 | Clean + both faults | Pass |
+
+All jobs used x86-64 Ubuntu 24.04 image `20261023.334.3`, GCC
+`13.3.0-6ubuntu2~24.04.1`, CMake 3.31.6, Ninja 1.13.2, and Python 3.12.3.
+The run completed on 2026-10-25 at 07:22 UTC (00:22 America/Los_Angeles).
+The compile audit checked 16 project translation units in normal builds and 17
+in sanitized builds. All expected probe signatures and exit behaviors passed;
+no compiler warnings or unexpected sanitizer reports appeared in the saved job
+logs. ASan leak detection was enabled for the suite. All five jobs completed,
+and the run's artifact listing returned zero uploads. Raw logs and job metadata
+were downloaded locally under the ignored validation directory.
+
+This closes the missing Linux ASan execution gate for the current CPU source.
+It does not resolve the Mac's pre-main failure, add device coverage, or claim a
+performance improvement. The follow-up documentation commit changes no code,
+tests, build configuration, or workflow relative to the tested source above.

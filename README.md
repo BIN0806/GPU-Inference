@@ -32,11 +32,11 @@ presets keep performance and diagnostic builds distinct. The legacy
 `KVLAB_SANITIZE=ON` option still enables both sanitizers.
 
 Chunk 05 adds compilation-flag auditing, isolated sanitizer probes, and a standard
-Linux CI matrix. Locally, Debug/Release pass 69 checks and UBSan passes 70;
-ASan runtime validation remains unresolved on this Mac. See the
+Linux CI matrix. All five [Linux CI jobs](https://github.com/BIN0806/GPU-Inference/actions/runs/40172396157) pass:
+Debug/Release each run 69 checks; ASan, UBSan, and combined each run 70. Local
+Debug/Release/UBSan also pass; ASan initialization remains unresolved on this Mac. See the
 [validation guide](docs/VALIDATION.md) for executed results, configuration
-migration, exact commands, and the scope of the coverage. A configured workflow
-is not evidence of a successful hosted run.
+migration, exact commands, and the scope of the coverage. The linked run records actual execution on GCC 13.3 and Ubuntu 24.04.
 
 The original development directory ends in a space. Quote that path in shell commands; a fresh clone can use a conventional directory name.
 
@@ -53,7 +53,7 @@ Each completed implementation chunk has its own detailed commit. See the [chunk 
 - [Workload replay](include/kvlab/workload.hpp) and [benchmark CLI](bench/allocator_bench.cpp): deterministic offered events, capacity failures, PMR counters, and reproducible output.
 - [Benchmark contract](docs/BENCHMARKS.md) and [measured CPU report](docs/experiments/0002-cpu-allocator-screening.md): 108-run page-size/sharing sweep, raw-data provenance, timer limits, and charts.
 - [Validation guide](docs/VALIDATION.md): independent sanitizer modes, fault-detection probes, compilation audits, and Linux CI.
-- Next: finish hosted ASan validation, then isolate request-table/primitive timing experiments before declaring Phase 1 complete.
+- Next: isolate request-table/primitive timing experiments before declaring Phase 1 complete. Linux now supplies the missing ASan coverage; the Mac initialization issue remains open.
 
 Request commitment declares materialized tokens; it does not write payloads or wait for a GPU. Borrowed request handles must not be manually retained, released, or sealed. The pool and any supplied metadata memory resource must outlive the request. CPU reference count zero does not prove GPU completion.
 

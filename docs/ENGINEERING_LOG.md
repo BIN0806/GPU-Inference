@@ -360,7 +360,7 @@ session installed only optional plotting packages in an isolated local environme
 
 ## Entry 0009 — 2026-10-25 — Can the sanitizer gate actually detect a fault?
 
-**State:** implemented; local Debug/Release/UBSan tested; hosted run pending.
+**State:** implemented and tested locally and on Linux; local ASan initialization remains unresolved.
 
 ### Question and decision
 
@@ -417,6 +417,27 @@ A configured sanitizer is not a proven detector, and a detector is not a proof
 of application correctness. Keep configuration, host runtime, and allocator
 behavior as separately observable checks. Complete Linux validation, retain the
 local failure, then return to the Phase 1 timing and request-table decision.
+
+### Hosted result and final decision
+
+[Run 40172396157](https://github.com/BIN0806/GPU-Inference/actions/runs/40172396157) completed successfully on source
+[`a5041ec`](https://github.com/BIN0806/GPU-Inference/commit/a5041ece6e01c559161c354474239bad22ab4928). Debug/Release each passed
+69 checks; ASan, UBSan, and combined each passed 70. Every flag audit and expected
+fault preflight passed. Environment: x86-64 Ubuntu 24.04 image `20261023.334.3`,
+GCC 13.3.0, CMake 3.31.6, Ninja 1.13.2, Python 3.12.3. Saved full job logs contain
+no compiler warnings or unexpected sanitizer findings. Job statuses are complete,
+and the run's artifact API reports zero uploads. The source revision and exact
+matrix are linked from [VALIDATION.md](VALIDATION.md). No rerun or allocator fix
+was needed to obtain the Linux pass.
+
+The independent Linux runtime works, including leak-enabled ASan coverage of
+the existing allocator suite. That supports the original hypothesis without
+explaining the Mac initialization issue. Kept the latter as unresolved instead
+of conflating a host-specific problem with an allocator bug. The evidence update
+is documentation-only relative to the tested implementation commit. Cost is $0,
+no GPU was provisioned, and no performance experiment was rerun. The next useful
+engineering question is still request-table metadata growth and batched primitive
+timing; this validation increment alone does not declare all of Phase 1 complete.
 
 ## Entry template — copy for each session
 

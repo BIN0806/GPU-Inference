@@ -1,7 +1,7 @@
 # ADR 0006 — Independently verify instrumentation and sanitizer runtime
 
 - Date: 2026-10-25
-- Status: accepted; implemented locally, hosted validation pending
+- Status: accepted; local and Linux validation executed (see the validation record)
 - Scope: CPU correctness/build validation; allocator algorithms unchanged
 
 ## Problem
