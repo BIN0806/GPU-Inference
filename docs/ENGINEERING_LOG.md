@@ -619,6 +619,35 @@ formatting gaps found in documentation review. It changes no executable code,
 tests, dependency locks, or workflow. Integrate by fast-forward, preserve the
 ignored blog locally, and validate the delivered project path. Spend remains $0.
 
+## Entry 0012 — 2026-10-26 — Separate the project introduction from development records
+
+**State:** documentation revised; no implementation, build, dependency, or
+workflow change.
+
+The root README had accumulated chunk numbers, spending checkpoints, exact test
+counts, source-level walkthroughs, and session-specific instructions. The user
+asked for a durable project introduction covering the high-level goal, setup,
+capabilities, and limitations instead.
+
+Rewrote the README around those needs. Added `docs/README.md` as a documentation
+index and `docs/development/README.md` for the source map, ownership caveats,
+examples, and first CPU experiment. Existing budget, history, validation, and
+engineering records retain their contents and stable paths; linking them avoids
+creating competing copies or breaking existing references. Updated contributor
+guidance to keep future progress reports out of the main README, and adjusted
+the roadmap's entry links to the documentation and validation records.
+
+Reviewed current capability claims against the implemented files: the allocator
+manages metadata, numerical references are CPU-validated, and GPU kernels,
+device storage, and full model serving remain unavailable. Checked Markdown
+file/anchor links, shell snippet syntax, CMake preset/target references, and the
+Git diff. No code tests or GPU work were needed or executed for this prose-only
+change. The ignored blog directory was untouched; this is a documentation
+reorganization, not a new implementation installment.
+
+The README now answers what the project is and how to start. Detailed history
+and experimental evidence remain discoverable through the documentation index.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

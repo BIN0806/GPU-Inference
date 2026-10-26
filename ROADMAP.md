@@ -1,6 +1,6 @@
 # LLM Kernel Inference: engineering roadmap
 
-Prepared 2026-10-23, America/Los_Angeles. **Status: design baseline. Live implementation status and executed checks are tracked in [README](README.md) and the [engineering log](docs/ENGINEERING_LOG.md); this roadmap itself is not performance evidence.** All effort estimates, experiment sizes, and spending allocations below are planning recommendations. Provider observations are dated in section 8.
+Prepared 2026-10-23, America/Los_Angeles. **Status: design baseline. The [README](README.md) summarizes project scope; implementation details and executed checks are tracked in the [documentation](docs/README.md), [engineering log](docs/ENGINEERING_LOG.md), and [validation record](docs/VALIDATION.md); this roadmap itself is not performance evidence.** All effort estimates, experiment sizes, and spending allocations below are planning recommendations. Provider observations are dated in section 8.
 
 This is a build-it-yourself blueprint. Implement the exercises, write down your predictions, and use AI to review invariants, explain profiler evidence, and minimize failing cases. Do not accept code you cannot explain line by line.
 

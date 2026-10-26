@@ -64,6 +64,17 @@ Documentation / ADR / engineering-log links:
 
 Update the engineering log alongside implementation. Record real bugs and rejected hypotheses. Keep comments focused on invariants and reasons; names and code should communicate routine mechanics. Use [the team workflow](docs/TEAM_WORKFLOW.md) when splitting work across people or agents.
 
+## Documentation responsibilities
+
+Keep the root README focused on the project goal, current capabilities and
+limitations, setup, and links into the documentation. It is the entry point for
+new readers, not a session report. Put implementation details in component
+guides, code navigation in `docs/development/`, and chunk history, test-run
+results, budget totals, and spending checkpoints in their existing records under
+`docs/`. Maintain `docs/README.md` as the navigation index. Update the root README
+when capabilities or setup change; routine development progress belongs in the
+engineering log. Preserve the local-only blog policy below.
+
 ## Detailed commits for implementation chunks
 
 Keep each completed chunk in a separate detailed commit with its code, tests,
