@@ -185,10 +185,38 @@ reference Python 3.12 / Torch 2.14.1. Raw logs are retained locally in
 
 The workflow now has six jobs: the existing five CMake configurations and a
 separate hash-pinned Linux CPU PyTorch reference job. The latter executes the
-same 10 unit tests and 218-case matrix. Hosted execution is pending at the
-implementation commit; the earlier dated runs above do not validate this source.
+same 10 unit tests and 218-case matrix. Hosted execution was pending at the implementation commit; the completed run
+below establishes this source independently of the earlier dated runs.
 
 The actual local GPU inventory finds no CUDA/profiler tools; its report correctly
 keeps execution and counters untested. The prepared CUDA smoke source and
 Triton/compile/device/profiler paths have not run on hardware. The previously
 observed local ASan startup limitation remains open; no local ASan pass is added.
+
+### Completed chunk 07 Linux evidence
+
+[run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228) completed successfully at source
+[`e76e02b`](https://github.com/BIN0806/GPU-Inference/commit/e76e02b602eacfca184e1a9dff0fb7c9a25d8061)
+on 2026-10-26 04:49 UTC (2026-10-25 21:49 America/Los_Angeles).
+
+| Job | Executed checks | Result |
+|---|---|---|
+| Debug / Release | 75 each | Pass |
+| ASan / UBSan / combined | 76 each, including runtime probes | Pass |
+| PyTorch CPU reference | 10 unit tests and 218 matrix cases | Pass |
+
+The runner was Ubuntu 24.04 image `20261023.334.3`, GCC 13.3.0, CMake 3.31.6,
+Ninja 1.13.2, Python 3.12.3, and Torch 2.14.1+cpu. Hash-checked Linux dependency
+installation and `pip check` passed. No C++ compiler warnings or unexpected
+sanitizer reports appear in the saved logs. The known optional NumPy warning
+appears in the reference job and is retained. All residual bits match; output
+error maxima match the local run, with a small FP32 normalized RMS difference
+that remains below the unchanged threshold. See [the numerical summary](validation/0007-linux-ci.json).
+
+All six jobs completed and the artifact listing returned zero uploads. Combined
+logs, run/job metadata, and the empty artifact listing are retained locally;
+the compact public summary records the combined log hash. The Linux per-case
+JSON was generated but not uploaded, so only its printed aggregate metrics are
+retained from that runner. Local per-case data remains available above. This
+follow-up changes documentation/evidence only; executable source and workflow
+are identical to the tested implementation commit. No GPU result is inferred.

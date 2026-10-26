@@ -528,8 +528,8 @@ $20 all-in; future pricing and profiling permissions need verification before us
 
 ## Entry 0011 — 2026-10-25 — Define residual rounding before writing a CUDA kernel
 
-**State:** references and preflight implemented; CPU correctness tested; Linux CI
-pending; all GPU execution untested. No RMSNorm performance experiment.
+**State:** references and preflight implemented; local and Linux CPU correctness
+tested; all GPU execution untested. No RMSNorm performance experiment.
 
 ### Objective, alternatives, and scope
 
@@ -595,6 +595,29 @@ same two-output work. GPU compile/launch, device correctness, Compute Sanitizer,
 and profiling must be actually executed before any GPU claim. Cost remains
 **$0**, with no rental or persistent volume created; the first $20 spending
 checkpoint remains unopened. Blog installment 07 is maintained locally only.
+
+### Linux validation and integration gate
+
+[run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228) passed at implementation commit
+[`e76e02b`](https://github.com/BIN0806/GPU-Inference/commit/e76e02b602eacfca184e1a9dff0fb7c9a25d8061).
+All six jobs completed: Debug/Release 75 each; three sanitizer configurations
+76 each; CPU reference 10 unit tests and all 218 cases. Linux hash-locked wheel
+installation and `pip check` also passed. No implementation or workflow fix was
+needed after this run. Runtime and compile instrumentation checks passed.
+
+Linux absolute output maxima match macOS. The FP32 normalized RMS maximum is
+`9.447669758998605e-8`, versus macOS `8.273038858220704e-8`; retain the backend
+difference rather than reporting identical results. No tolerance was changed.
+The known optional NumPy warning remains; no C++ warnings or unexpected
+sanitizer diagnostics appeared. The [summary](validation/0007-linux-ci.json)
+records source/job URLs, toolchain, and retained-log hash. No artifact was
+uploaded; Linux per-case JSON is therefore not retained, while printed summaries
+and full job logs are saved locally. All GPU paths remain untested.
+
+The evidence follow-up updates current status, Linux results, and two table
+formatting gaps found in documentation review. It changes no executable code,
+tests, dependency locks, or workflow. Integrate by fast-forward, preserve the
+ignored blog locally, and validate the delivered project path. Spend remains $0.
 
 ## Entry template — copy for each session
 

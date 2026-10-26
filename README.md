@@ -35,8 +35,7 @@ presets keep performance and diagnostic builds distinct. The legacy
 
 Chunk 07 passes 75 local Debug/Release checks and 76 UBSan checks. The optional
 PyTorch CPU reference passes 10 unit tests and a 218-case shape/dtype matrix,
-including a targeted test for rounded-residual semantics. Linux validation of
-this chunk is pending at the implementation commit. See [the validation guide](docs/VALIDATION.md)
+including a targeted test for rounded-residual semantics. All six jobs in Linux [run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228) pass, including all sanitizer modes and the reference matrix. See [the validation guide](docs/VALIDATION.md)
 for executed results and the unresolved local Mac ASan initialization issue.
 The [paired CPU allocator experiment](docs/experiments/0003-request-table-growth.md)
 retains its 54 matching pairs, memory tradeoffs, and measured regression.

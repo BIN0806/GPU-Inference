@@ -1,0 +1,75 @@
+{
+  "source_commit": "e76e02b602eacfca184e1a9dff0fb7c9a25d8061",
+  "run_url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228",
+  "completed_utc": "2026-10-26T04:49:03Z",
+  "jobs": [
+    {
+      "name": "validate (asan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403140521"
+    },
+    {
+      "name": "validate (debug)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403140675"
+    },
+    {
+      "name": "validate (asan-ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403140740"
+    },
+    {
+      "name": "validate (release)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403140781"
+    },
+    {
+      "name": "validate (ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403140897"
+    },
+    {
+      "name": "rmsnorm-reference",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228/job/121403141444"
+    }
+  ],
+  "ctest_counts": {
+    "validate (asan)": 76,
+    "validate (debug)": 75,
+    "validate (asan-ubsan)": 76,
+    "validate (release)": 75,
+    "validate (ubsan)": 76
+  },
+  "reference_unit_tests": 10,
+  "reference_cases": 218,
+  "numerical_summary": [
+    {
+      "dtype": "float16",
+      "cases": 109,
+      "max_abs_error": 0.001953125,
+      "max_normalized_rms_error": 0.00012127999441234786
+    },
+    {
+      "dtype": "float32",
+      "cases": 109,
+      "max_abs_error": 9.5367431640625e-07,
+      "max_normalized_rms_error": 9.447669758998605e-08
+    }
+  ],
+  "environment": {
+    "runner_image": "ubuntu24 20261023.334.3",
+    "compiler": "GCC 13.3.0-6ubuntu2~24.04.1",
+    "cmake": "3.31.6",
+    "ninja": "1.13.2",
+    "python": "3.12.3",
+    "torch": "2.14.1+cpu"
+  },
+  "artifact_upload_count": 0,
+  "combined_log_sha256": "44ddfe8fc1c964b7d07542fc1760d672c544355e458d14bb384bf567942d5789",
+  "limitations": [
+    "CPU only; all GPU execution remains untested",
+    "Linux per-case JSON was not uploaded; summary and logs retained locally",
+    "Optional NumPy bridge warning retained; no NumPy conversion used"
+  ]
+}

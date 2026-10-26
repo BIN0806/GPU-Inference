@@ -117,7 +117,12 @@ FP16 **0.001953125**, FP32 **9.5367431640625e-7**. Largest per-case normalized
 RMS error: FP16 **1.2127999441234786e-4**, FP32 **8.273038858220704e-8**.
 These are numerical errors, not runtime or GPU performance results. Complete
 case records are in [the local CPU result](validation/0007-rmsnorm-cpu.json).
-Linux CPU PyTorch execution is pending at the implementation commit.
+Linux x86-64 / Python 3.12.3 / PyTorch 2.14.1+cpu also passes all 218 cases in
+[run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228). Absolute error maxima and the FP16 normalized RMS maximum match the local
+run; Linux's largest per-case FP32 normalized RMS error is
+`9.447669758998605e-8`. The small backend difference remains within the same
+unchanged tolerance. [Linux summary](validation/0007-linux-ci.json) retains the
+executed job links and metrics; the Linux per-case JSON was not uploaded.
 
 The optional NumPy bridge is absent from these small test environments, so
 PyTorch emits a startup warning. No code uses NumPy conversion, and the warning

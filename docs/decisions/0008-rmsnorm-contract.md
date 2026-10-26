@@ -1,6 +1,6 @@
 # ADR 0008 — Rounded residual, two outputs, independent numerical oracle
 
-Date: 2026-10-25. Status: implemented and locally tested; Linux reference CI pending.
+Date: 2026-10-25. Status: implemented; local and Linux CPU validation passed ([run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228)). GPU paths untested.
 
 ## Decision
 

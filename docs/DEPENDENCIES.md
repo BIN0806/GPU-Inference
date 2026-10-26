@@ -92,7 +92,7 @@ wheel locks keep that dependency outside the allocator build:
   macOS 14+, PyPI wheels; installed and executed on the local M3 Pro.
 - [Linux x86-64 CPU lock](../scripts/requirements-rmsnorm-linux-cpu.txt): CPython
   3.12, official PyTorch CPU index. Exact wheel bytes were downloaded and hashed
-  locally; Linux execution is pending at the implementation commit.
+  locally; Linux installation, `pip check`, and execution passed in [run 40270856228](https://github.com/BIN0806/GPU-Inference/actions/runs/40270856228).
 
 Install with `python -m pip install --require-hashes -r <lock>` inside a venv,
 then `python -m pip check`. Each lock fixes all resolved dependencies, not only
