@@ -2,13 +2,14 @@
 
 A C++/CUDA inference-components laboratory built in small, explained, testable increments: a fixed-page KV allocator, fused residual/RMSNorm, and single-layer paged decode attention.
 
-**Implemented: chunks 01–06, CPU ownership, workloads, validation, and measured request-table reuse.**
+**Implemented: chunks 01–07, CPU ownership/workloads and residual/RMSNorm references.**
 Generation-tagged pages, checked sharing, move-only leases, and transactional
 request tables now have complete-owner memory accounting and seeded CPU replay.
 Request growth now reuses host table storage with suffix rollback. The benchmark
 records admission failures, page waste, metadata allocations, retained host bytes,
-and instrumented/aggregate timings. KV payloads, CUDA kernels, and real serving remain
-planned. Recorded infrastructure spending is **$0**, with a **$100 ceiling** and
+and instrumented/aggregate timings. Chunk 07 adds an independent numerical oracle,
+a checked eager PyTorch reference, and GPU preflight preparation. KV payloads,
+CUDA normalization/attention kernels, and real serving remain planned. Recorded infrastructure spending is **$0**, with a **$100 ceiling** and
 **$20 first spending checkpoint**.
 
 Start with the [engineering roadmap](ROADMAP.md), [implementation log](docs/ENGINEERING_LOG.md), and code contracts below. Blog posts are local-only and are not distributed with the repository.
@@ -32,13 +33,13 @@ builds with tests disabled. Separate `release`, `asan`, `ubsan`, and `asan-ubsan
 presets keep performance and diagnostic builds distinct. The legacy
 `KVLAB_SANITIZE=ON` option still enables both sanitizers.
 
-Chunk 06 passes 73 local Debug/Release checks and 74 UBSan checks. The new
-failure tests preserve shared prefixes and request state while permitting retained
-host capacity. The [paired CPU experiment](docs/experiments/0003-request-table-growth.md)
-records 54 matching workload pairs, fewer allocation calls, increased host memory,
-and a small regression in one regime. All five [Linux configurations](https://github.com/BIN0806/GPU-Inference/actions/runs/40232916754) also pass
-(73 normal / 74 sanitized checks). See [the validation guide](docs/VALIDATION.md)
-for the executed matrix and unresolved local Mac ASan initialization issue.
+Chunk 07 passes 75 local Debug/Release checks and 76 UBSan checks. The optional
+PyTorch CPU reference passes 10 unit tests and a 218-case shape/dtype matrix,
+including a targeted test for rounded-residual semantics. Linux validation of
+this chunk is pending at the implementation commit. See [the validation guide](docs/VALIDATION.md)
+for executed results and the unresolved local Mac ASan initialization issue.
+The [paired CPU allocator experiment](docs/experiments/0003-request-table-growth.md)
+retains its 54 matching pairs, memory tradeoffs, and measured regression.
 
 The original development directory ends in a space. Quote that path in shell commands; a fresh clone can use a conventional directory name.
 
@@ -56,7 +57,9 @@ Each completed implementation chunk has its own detailed commit. See the [chunk 
 - [Benchmark contract](docs/BENCHMARKS.md) and [measured CPU report](docs/experiments/0002-cpu-allocator-screening.md): 108-run page-size/sharing sweep, raw-data provenance, timer limits, and charts.
 - [Validation guide](docs/VALIDATION.md): independent sanitizer modes, fault-detection probes, compilation audits, and Linux CI.
 - [Growth decision](docs/decisions/0007-request-table-growth.md) and [paired comparison](docs/experiments/0003-request-table-growth.md): suffix rollback, allocation reductions, retained-memory cost, and a measured regression.
-- Next: prepare the correctness-first residual/RMSNorm interface and remote preflight before a budgeted GPU session.
+- [Residual/RMSNorm contract](docs/RMSNORM.md), [independent oracle](python/kvlab/oracle.py), and [PyTorch reference](python/kvlab/reference.py): two outputs, explicit rounding, boundary checks, and 218 CPU correctness cases.
+- [GPU preflight](docs/GPU_PREFLIGHT.md): bounded native/framework/profiler probes prepared for an existing GPU host; inventory and failure handling tested locally, device execution untested.
+- Next: implement separate CUDA add/RMSNorm controls, then a fused kernel against the same contract. A GPU session must first close the actual compile/launch/debugger gates.
 
 Request commitment declares materialized tokens; it does not write payloads or wait for a GPU. Borrowed request handles must not be manually retained, released, or sealed. The pool and any supplied metadata memory resource must outlive the request. CPU reference count zero does not prove GPU completion.
 

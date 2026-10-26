@@ -28,8 +28,9 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 03 | 2026-10-23 | Local CPU only | $0 | $0 | $0 | N/A | No cloud resource provisioned | Request transactions, failure tests, and blog |
 | Chunk 04 | 2026-10-24 | Local CPU only | $0 | $0 | $0 | N/A | No remote compute/storage provisioned by this session | Accounting tests, two retained 108-run sweeps, and local plots |
 | Chunk 05 | 2026-10-25 | Local CPU and standard public-repository GitHub Actions | $0 | $0 | $0 | N/A | All 5 jobs in run 40172396157 completed; artifact count 0; no GPU or persistent volume | Sanitizer probes and Linux validation |
-
 | Chunk 06 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | 108 local processes and all 5 jobs in run 40232916754 completed; artifact count 0; no GPU | Request growth tests and paired host-memory/time comparison |
+
+| Chunk 07 preparation | 2026-10-25 | Local CPU only; hosted CPU checks pending | $0 | $0 | $0 | N/A | No GPU, paid compute, or persistent volume provisioned | 218 reference cases, CPU tests, and local tool inventory |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
@@ -57,8 +58,8 @@ The repository was verified public before enabling CI. GitHub states that
 standard hosted runners are free for public repositories; workflow logs and job
 summaries do not count against artifact storage. This workflow uses only the
 standard Ubuntu runner, with no Actions cache or artifact uploads. It has a
-10-minute per-job timeout, at most two concurrent matrix jobs, and cancels older
-runs on the same ref. A job guard skips execution if the repository is private.
+10-minute per-job timeout, at most two concurrent matrix jobs plus one independent CPU reference job,
+and cancels older runs on the same ref. A job guard skips execution if the repository is private.
 Larger runners, GPU services, paid storage, and a future visibility change need
 a new cost review. [GitHub Actions billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions).
 

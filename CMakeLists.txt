@@ -86,6 +86,12 @@ if(BUILD_TESTING)
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/benchmark_output_test.py" "$<TARGET_FILE:allocator_bench>")
   add_test(NAME ValidationTools COMMAND "${Python3_EXECUTABLE}"
     "${CMAKE_CURRENT_SOURCE_DIR}/tests/validation_tools_test.py")
+  add_test(NAME RmsNormOracle COMMAND "${CMAKE_COMMAND}" -E env
+    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}/python" "${Python3_EXECUTABLE}"
+    -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python" -p test_rmsnorm_oracle.py)
+  add_test(NAME GpuPreflightContracts COMMAND "${Python3_EXECUTABLE}"
+    -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python" -p test_gpu_preflight.py)
+  set_tests_properties(RmsNormOracle GpuPreflightContracts PROPERTIES TIMEOUT 30)
   set(kvlab_expected_sanitizers "none")
   if(kvlab_sanitizers)
     set(kvlab_expected_sanitizers "${kvlab_sanitizer_flags}")

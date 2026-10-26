@@ -1,4 +1,4 @@
-# Dependencies for the CPU implementation (through chunk 06)
+# Dependencies for the CPU implementation (through chunk 07)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -68,7 +68,8 @@ GitHub-hosted runners and one external action:
 - The runner image and installed compiler/CMake/Ninja/Python are recorded in job
   logs. `ubuntu-24.04` is a moving image, not a fully pinned container. A changed
   image is a reproduction variable; record it before attributing a regression
-  to source changes. We do not install compiler or Python packages during CI.
+  to source changes. The five CMake jobs do not install compiler or Python packages. The separate
+  chunk 07 reference job installs the pinned CPU Python dependencies described below.
 
 The action tag and commit were checked on 2026-10-25. Updating it is a reviewed
 source change. Checkout does not persist credentials; jobs have read-only
@@ -79,3 +80,35 @@ Chunk 06 adds no dependency. The paired comparison uses Python's standard librar
 its optional plotting script uses the existing Matplotlib lock. Both measured
 binaries were built with Apple Clang 17 / libc++ 200100 on an Apple M3 Pro. Compiler
 and source provenance are linked from [EXP-0003](experiments/0003-request-table-growth.md).
+
+## Chunk 07 optional PyTorch reference
+
+The C++ library, standard CMake suite, FP64 oracle, and preflight orchestration
+still need no third-party Python package. Running the tensor reference adds an
+isolated Python 3.12 environment with PyTorch 2.14.1. Two complete hash-checked
+wheel locks keep that dependency outside the allocator build:
+
+- [macOS ARM64 lock](../scripts/requirements-rmsnorm-macos.txt): CPython 3.12,
+  macOS 14+, PyPI wheels; installed and executed on the local M3 Pro.
+- [Linux x86-64 CPU lock](../scripts/requirements-rmsnorm-linux-cpu.txt): CPython
+  3.12, official PyTorch CPU index. Exact wheel bytes were downloaded and hashed
+  locally; Linux execution is pending at the implementation commit.
+
+Install with `python -m pip install --require-hashes -r <lock>` inside a venv,
+then `python -m pip check`. Each lock fixes all resolved dependencies, not only
+Torch. Different platform indexes resolved different transitive versions; do
+not merge the two environments. PyTorch carries a BSD-style license and bundled
+third-party notices; dependency licenses remain in their distributions. No
+wheel or third-party source is committed.
+
+The local installation passes `pip check`. NumPy is intentionally absent: no
+reference code uses its bridge. The observed startup warning is retained rather
+than suppressed. CPython 3.14.0's local certificate setup rejected one metadata
+request; a TLS-verifying curl request succeeded, and the Homebrew Python 3.12
+venv installed the wheels without weakening certificate verification.
+
+These are **CPU correctness locks**, not a CUDA development-image specification.
+Do not install them over a rented GPU environment. The remote driver, toolkit,
+PyTorch CUDA wheel, Triton, and profiler tuple still needs selection and actual
+execution. [Reference setup](RMSNORM.md), [preflight](GPU_PREFLIGHT.md),
+[official PyTorch package metadata](https://pypi.org/pypi/torch/json).

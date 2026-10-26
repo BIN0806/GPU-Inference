@@ -3,9 +3,9 @@ name: CPU validation
 on:
   push:
     branches: [main, 'codex/**']
-    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', '.github/workflows/cpu-ci.yml']
+    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', 'python/**', 'tools/**', '.github/workflows/cpu-ci.yml']
   pull_request:
-    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', '.github/workflows/cpu-ci.yml']
+    paths: ['CMakeLists.txt', 'CMakePresets.json', 'src/**', 'include/**', 'bench/**', 'examples/**', 'tests/**', 'scripts/**', 'python/**', 'tools/**', '.github/workflows/cpu-ci.yml']
   workflow_dispatch:
 
 permissions:
@@ -64,3 +64,23 @@ jobs:
       - name: Run complete CPU suite
         # Use the build tree directly so preset environments cannot replace leak settings.
         run: ctest --test-dir "build/${{ matrix.preset }}" --output-on-failure --timeout 120
+
+  rmsnorm-reference:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare pinned CPU reference environment
+        run: |
+          python3.12 -m venv /tmp/kvlab-reference
+          /tmp/kvlab-reference/bin/python -m pip install --require-hashes -r scripts/requirements-rmsnorm-linux-cpu.txt
+          /tmp/kvlab-reference/bin/python -m pip check
+          /tmp/kvlab-reference/bin/python -m pip freeze
+      - name: Check reference boundary contracts
+        run: PYTHONPATH=python /tmp/kvlab-reference/bin/python -m unittest discover -s tests/python -p 'test_rmsnorm_*.py' -v
+      - name: Check the full CPU shape and dtype matrix
+        run: /tmp/kvlab-reference/bin/python scripts/check_rmsnorm_reference.py --output artifacts/rmsnorm-cpu

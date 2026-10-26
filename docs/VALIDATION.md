@@ -9,11 +9,11 @@ first question partially; a generic crash is not a passing fault-detection test.
 
 | Preset | Configuration | Expected sanitizer set | Registered checks |
 |---|---|---|---:|
-| `debug` | Debug | none | 73 |
-| `release` | Release | none | 73 |
-| `asan` | Debug | address | 74 |
-| `ubsan` | Debug | undefined | 74 |
-| `asan-ubsan` | Debug | address, undefined | 74 |
+| `debug` | Debug | none | 75 |
+| `release` | Release | none | 75 |
+| `asan` | Debug | address | 76 |
+| `ubsan` | Debug | undefined | 76 |
+| `asan-ubsan` | Debug | address, undefined | 76 |
 
 `KVLAB_ENABLE_ASAN` and `KVLAB_ENABLE_UBSAN` independently select instrumentation.
 `KVLAB_SANITIZE=ON` remains a legacy alias for both. All presets explicitly clear
@@ -73,7 +73,7 @@ The probe is a separate test-only executable, never linked into the allocator.
 executing undefined behavior. `SanitizerRuntime` is registered only in sanitized
 builds. The unchanged allocator model suites still exercise 1,264,000 decisions
 per full run. Counts include individual GoogleTests, demos, and Python checks;
-69/70 are not counts of independent statistical trials.
+these totals are not counts of independent statistical trials.
 
 Sanitizer success is evidence about these executed paths and toolchains, not a
 proof that all memory bugs or undefined behavior are absent. There is no CUDA,
@@ -162,3 +162,33 @@ flag audits passed. GCC 13.3.0, Ubuntu 24.04 image `20261023.334.3`, CMake 3.31.
 Ninja 1.13.2, Python 3.12.3. No compiler warnings or unexpected sanitizer reports
 appeared in the retained logs. All jobs completed; artifact count was zero. Performance evidence is
 kept separate in [EXP-0003](experiments/0003-request-table-growth.md).
+
+## Chunk 07 reference and preflight validation
+
+Two new CTest entries (`RmsNormOracle` and `GpuPreflightContracts`) increase the
+current total to **75 normal / 76 sanitized** checks. Fresh local Debug and
+Release builds pass 75/75; fresh UBSan passes 76/76. After adding a final
+preflight deadline regression, the two affected CTest entries passed again.
+The current preflight entry includes six unittest methods covering classification,
+real missing-program/timeout behavior, failed compilation, exhausted global
+budget, non-overwrite behavior, and failed framework/profiler fixtures. Fixture
+strings are not device evidence. No allocator implementation changed.
+
+The separate optional PyTorch CPU environment passes 10 unit tests plus all
+218 shape/dtype cases, with bitwise residual equality and zero normalized-output
+threshold failures. [Numerical contract and results](RMSNORM.md) explain the
+error metrics and exact rounding witness. The complete local case records and
+source hashes are in [the result JSON](validation/0007-rmsnorm-cpu.json).
+Local toolchain remains Apple Clang 17, macOS ARM64, CMake 4.4.4, Ninja 1.13.2;
+reference Python 3.12 / Torch 2.14.1. Raw logs are retained locally in
+`artifacts/validation/chunk-07/`. No RMSNorm performance result is claimed.
+
+The workflow now has six jobs: the existing five CMake configurations and a
+separate hash-pinned Linux CPU PyTorch reference job. The latter executes the
+same 10 unit tests and 218-case matrix. Hosted execution is pending at the
+implementation commit; the earlier dated runs above do not validate this source.
+
+The actual local GPU inventory finds no CUDA/profiler tools; its report correctly
+keeps execution and counters untested. The prepared CUDA smoke source and
+Triton/compile/device/profiler paths have not run on hardware. The previously
+observed local ASan startup limitation remains open; no local ASan pass is added.

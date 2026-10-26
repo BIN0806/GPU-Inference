@@ -11,6 +11,8 @@ The repository preserves independently buildable implementation chunks:
 | 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally and Linux; all 3 Linux sanitizer modes 70/70 |
 | 06 | `perf(allocator): reuse request-table storage with suffix rollback (chunk 06)` | 73/73 local and Linux Debug/Release; all Linux sanitizer modes 74/74; 54 paired observations |
 
+| 07 | `feat(rmsnorm): add rounded-residual references and GPU preflight (chunk 07)` | 75/75 local Debug/Release, 76/76 UBSan; 10 reference tests and 218 CPU cases; Linux pending |
+
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to
 exclude the entire local blog directory. Commit IDs changed. Implementation,

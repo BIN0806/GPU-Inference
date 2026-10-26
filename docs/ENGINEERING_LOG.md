@@ -526,6 +526,76 @@ correctness-first residual/RMSNorm contract and remote preflight preparation.
 No GPU rental occurred and spending remains $0. The first spending gate is still
 $20 all-in; future pricing and profiling permissions need verification before use.
 
+## Entry 0011 — 2026-10-25 — Define residual rounding before writing a CUDA kernel
+
+**State:** references and preflight implemented; CPU correctness tested; Linux CI
+pending; all GPU execution untested. No RMSNorm performance experiment.
+
+### Objective, alternatives, and scope
+
+Chunk 06 established CPU ownership and measured growth behavior. The next risk
+is numerical: a fused residual/RMSNorm kernel can return the right rounded
+residual yet normalize a different, unrounded value. Freeze that contract before
+writing or timing a device implementation. [ADR 0008](decisions/0008-rmsnorm-contract.md)
+compares rounded versus unrounded intermediates, one versus two outputs, a shared
+Torch oracle versus independent scalar arithmetic, and broad dtype support
+versus a bounded FP16/FP32 development domain.
+
+The chosen contract returns fresh `(z, y)` with `z = round_T(FP32(x)+FP32(r))`.
+Both eager math and the independent oracle normalize that stored value. Fixed
+epsilon, contiguous disjoint input ranges, finite activation/weight bounds,
+empty batches, and widths 1–8192 are explicit. Out-of-domain inputs fail.
+No production-model activation guarantee, BF16, in-place support, or speedup
+is inferred from this first contract.
+
+### Implementation and diagnostic findings
+
+`python/kvlab/oracle.py` uses `struct` storage rounding and FP64 `math.fsum`;
+`reference.py` separates expensive checked input validation from prevalidated
+PyTorch math. The checker compares residual bits, per-element output thresholds,
+maximum error, normalized RMS error, and worst coordinate. The matrix runner
+saves source hashes, versions, active-case context, and all 218 observations.
+
+A deliberate wrong calculation exposed a test weakness: ordinary FP16 tolerance
+accepts normalization of the unrounded sum. For `[1,2,3] + [2^-11,2^-10,2^-9]`,
+the first correct output is `0.462646484375`, versus wrong `0.462890625`.
+Added a targeted exact CPU witness alongside the broad matrix. This is a test
+coverage finding, not a claim that a CUDA defect was fixed. The witness teaches
+why tolerance alone cannot define semantic equivalence.
+
+The native smoke source, framework probe, and preflight orchestrator are prepared
+for an existing GPU host. Inventory never claims execution; native/framework
+checks require actual output markers and return codes; profiler permission and
+timeline results remain separate. A global deadline bounds per-command waits;
+process-group termination handles timed-out tool descendants. Fixtures cover
+failed compilation, missing frameworks, counter denial, false success markers,
+and exhausted budgets. None substitutes for actual device validation.
+
+Pinned CPU wheel locks isolate Torch from the C++ build. A local Python 3.14.0
+certificate error affected metadata retrieval; a verifying curl request and
+Homebrew Python 3.12 venv resolved setup without disabling TLS. PyTorch's missing
+optional NumPy bridge warning is retained; no code uses NumPy and `pip check`
+passes. No GPU image/toolkit tuple has been selected.
+
+### Executed verification and next gate
+
+Fresh local Debug/Release pass 75/75 each and UBSan 76/76. The two affected Python
+CTest entries pass again after the final deadline regression. Reference unit
+tests pass 10/10; the final 218-case CPU matrix passes with every residual bit
+matching. Maximum absolute errors are FP16 `0.001953125` and FP32
+`9.5367431640625e-7`. [The complete result](validation/0007-rmsnorm-cpu.json)
+retains source hashes and each case; [the contract](RMSNORM.md) defines tolerances.
+The local preflight inventory records absent CUDA/profiler tools and false
+execution readiness. C++ allocator code is unchanged. Local ASan remains an
+existing environment limitation, not a newly passed check.
+
+The six-job Linux workflow is the next gate before integration. After it passes,
+implement separate CUDA add and RMSNorm controls, then fusion, preserving the
+same two-output work. GPU compile/launch, device correctness, Compute Sanitizer,
+and profiling must be actually executed before any GPU claim. Cost remains
+**$0**, with no rental or persistent volume created; the first $20 spending
+checkpoint remains unopened. Blog installment 07 is maintained locally only.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question
