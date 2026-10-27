@@ -31,6 +31,7 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 06 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | 108 local processes and all 5 jobs in run 40232916754 completed; artifact count 0; no GPU | Request growth tests and paired host-memory/time comparison |
 | Chunk 07 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 6 jobs in run 40270856228 completed; artifact count 0; no GPU or persistent volume | 218 reference cases locally and Linux, C++/sanitizer tests, and local tool inventory |
 | Chunk 08 | 2026-10-26 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 7 jobs in run 40427805616 completed; artifact uploads 0; no GPU or persistent volume | Native CUDA compiled/linked, host checks passed; GPU execution untested |
+| Chunk 09 | 2026-10-27 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 7 jobs in run 40469386543 completed; artifact uploads 0; no GPU or volume | Native session runner, interruption cleanup, sm_86/sm_89 compilation and host checks |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
@@ -75,3 +76,8 @@ confirmed no GPU host is available and requested workflow preparation. No
 rental, credit purchase, retained cloud volume, or paid profiling was initiated.
 Hosted CPU validation is pending at the implementation commit; record its
 completed state after the jobs finish. The first $20 checkpoint remains unopened.
+
+
+Follow-up: run 40469386543 completed all seven standard Linux jobs successfully
+at source `a72a702`; the artifact listing returned zero uploads. No incremental
+infrastructure charge or retained provider resource resulted from this chunk.

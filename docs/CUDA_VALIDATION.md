@@ -126,5 +126,6 @@ seven preflight tests passed, including real timeout/SIGINT/SIGTERM child-proces
 cleanup. Success/failure GPU records in these tests are explicitly synthetic.
 The Linux workflow now exercises a real fresh sm_86 build through host-only
 mode, retains sm_89 compilation, and prints the complete host report in its log.
-Its run is pending at the implementation commit. No GPU host is available yet;
+It passed in [run 40469386543](https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543) at source `a72a702`. All seven Linux jobs passed (82 normal / 83 sanitized CTest checks; 10 reference tests and 218 CPU cases).
+[Retained summary](validation/0009-linux-ci.json). No GPU host is available yet;
 native hardware execution, Compute Sanitizer, and performance remain untested.

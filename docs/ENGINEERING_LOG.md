@@ -823,3 +823,22 @@ matrix, sanitizer run, and profiler permission are different evidence. The next
 useful step is an approved, costed GPU session using the new command; examine
 failures before fusion or performance experiments. No rental was started and
 recorded spend remains $0.
+
+
+### Entry 0014 follow-up — Hosted workflow passed
+
+Source [`a72a702`](https://github.com/BIN0806/GPU-Inference/commit/a72a702262f47b134766ea4207426164d87d67a1)
+passed all seven jobs in [run 40469386543](https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543). Linux Debug/Release ran
+82 checks each and the three host sanitizer modes ran 83 each. The reference
+still passed 10 unit tests and 218 CPU cases. The fresh-build runner compiled
+sm_86, linked and executed host checks, and verified source/binary hashes with
+`hardware_checks_passed=false`; sm_89 and shared-runtime checks also passed.
+No implementation fix was required. Complete logs and the parsed host JSON are
+retained locally; [public provenance](validation/0009-linux-ci.json) records
+source, job links, environment and hashes. The known optional NumPy warning
+remains; no compiler warning or unexpected sanitizer finding appeared.
+
+Confirmed all jobs completed and the artifact count was zero. No GPU resource
+or storage was provisioned. This evidence follow-up changes documentation only.
+Deliver by guarded fast-forward, preserve prior local blog articles, and check
+the actual project path before publishing main. The hardware gate remains open.

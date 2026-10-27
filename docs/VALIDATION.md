@@ -286,3 +286,26 @@ This verifies the absence of a toolkit is a failed gate, not a successful skip.
 The Linux workflow now drives the fresh sm_86 compile/host path through the new
 runner and retains sm_89 compile/host checks. CI is pending at the implementation
 commit. No CUDA arithmetic or tolerance changed, and no GPU result is claimed.
+
+
+### Completed chunk 09 Linux evidence
+
+[Run 40469386543](https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543) completed at source `a72a702` on
+2026-10-27 07:50:39 UTC (00:50:39 America/Los_Angeles). All seven jobs passed:
+Debug/Release 82 each; ASan/UBSan/combined 83 each; CPU reference 10 unit tests
+and 218 cases; native sm_86 fresh-build runner plus sm_89 compile/host checks.
+The three sanitizer configurations include their expected-fault runtime probes
+and first-party instrumentation audits. No code changes were needed after CI.
+
+The host runner reported `host_verified` with `hardware_checks_passed=false`,
+complete configure/build/host/hash gates, and an empty tracked Git status. Its
+retained source hashes match the tested commit. The binary fingerprint and
+compact environment/job record are in [the summary](validation/0009-linux-ci.json).
+The raw host report was extracted from the completed job log and saved locally,
+along with combined logs, metadata, and their hashes. Shared-runtime loader
+checks passed. No C++/CUDA compiler warnings or unexpected sanitizer diagnostics
+appeared; the existing optional NumPy warning remains in the reference job.
+
+All jobs completed with zero artifact uploads. This follow-up updates evidence
+and documentation only; no executable source, test, workflow, or tolerance
+changed. Actual GPU execution remains the next gate.

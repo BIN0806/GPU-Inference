@@ -1,0 +1,98 @@
+{
+  "source_commit": "a72a702262f47b134766ea4207426164d87d67a1",
+  "run_url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543",
+  "completed_utc": "2026-10-27T07:50:39Z",
+  "jobs": [
+    {
+      "name": "validate (release)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072524915"
+    },
+    {
+      "name": "rmsnorm-reference",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525228"
+    },
+    {
+      "name": "cuda-compile",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525245"
+    },
+    {
+      "name": "validate (asan-ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525278"
+    },
+    {
+      "name": "validate (ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525311"
+    },
+    {
+      "name": "validate (asan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525403"
+    },
+    {
+      "name": "validate (debug)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543/job/122072525457"
+    }
+  ],
+  "ctest_counts": {
+    "validate (release)": 82,
+    "validate (asan-ubsan)": 83,
+    "validate (ubsan)": 83,
+    "validate (asan)": 83,
+    "validate (debug)": 82
+  },
+  "runner_contract_tests": 12,
+  "preflight_contract_tests": 7,
+  "reference_unit_tests": 10,
+  "reference_cpu_cases": 218,
+  "native_host_runner": {
+    "status": "host_verified",
+    "hardware_checks_passed": false,
+    "checks": {
+      "configure": true,
+      "build": true,
+      "host": true,
+      "sources_unchanged": true,
+      "binary_unchanged": true
+    },
+    "cuda_arch": "86",
+    "binary_sha256": "4e6778ce128263619b9e843b1d97ebacd5685e2693f4b095ab2733696a60403a",
+    "source_sha256": {
+      "CMakeLists.txt": "e4ee8502093f6539c02e23eeaf3a4aef4a55d812997e8bfd86a73cde812a2ac9",
+      "include/kvlab/rmsnorm_contract.hpp": "839f5a08d26affc7f967c0f212256e168f574157bf6edad2b7aa0924c8617aac",
+      "include/kvlab/rmsnorm_cuda.hpp": "e84059db251d2372baee409e800c4824f4c178adb971d84de2f6730df10bd8c4",
+      "src/kernels/residual_rmsnorm.cu": "c8e288d75f7f50501ee3613b212498dd265d4f1154946d738c69375934bf8675",
+      "tests/cuda/rmsnorm_cuda_check.cu": "4a89f09a9f11296448fc0537f7a68dd69c927ed891b6f9cd5646936fbb9a873b",
+      "scripts/check_rmsnorm_cuda.py": "d8594ce09e3883ffe0dcf3a18083ed15fa2d8414e7fbe2328e0ba32b9e4a78c5",
+      "scripts/gpu_preflight.py": "75630b3a7fcefd2b8834846ba4d6ebe48435416352dcdf367bfd64c986279b3e"
+    },
+    "separate_compile_arch": "89",
+    "device_execution": false
+  },
+  "environment": {
+    "runner": "Ubuntu 24.04",
+    "image": "20261023.334.3",
+    "gcc": "13.3.0",
+    "nvcc": "12.8.93",
+    "cmake": "3.31.6",
+    "ninja": "1.13.2"
+  },
+  "artifact_upload_count": 0,
+  "retained_logs": {
+    "linux-ci.log": "7557c86a6d69f9c327f5fd2bfb212333c27aec7865dde8be2c40ad65f6a8b9c3",
+    "linux-ci-run.json": "41d48b5eb62168b55f59c54756130df8eda3adcaaebf74e7dd1bcfabb94ce4a3",
+    "linux-ci-artifacts.json": "244563f989470892c537c9a4622920af0d228ee4528f7d00c64a06d6cd95856c",
+    "linux-host-validation.json": "2efc1a04922f2c377dc946c25cddee2fb39dbdd748f0374d99ba1485633c6649"
+  },
+  "limitations": [
+    "No GPU host or device execution.",
+    "Sanitizer GPU reports and successful GPU pipeline are tested with fixtures only.",
+    "No kernel performance measurement.",
+    "Existing optional NumPy warning remains in the CPU PyTorch job."
+  ]
+}
