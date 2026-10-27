@@ -19,6 +19,18 @@ def fixture(stdout="", status="exited", returncode=0):
 
 
 class PreflightTest(unittest.TestCase):
+    def test_interruption_preserves_partial_command_and_stops_inventory(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "interrupted"
+            partial = fixture("partial output", status="interrupted", returncode=None)
+            with mock.patch.object(sys, "argv", ["preflight", "--output", str(output)]), mock.patch.object(preflight, "run_command", side_effect=preflight.CommandInterrupted(partial)) as run:
+                self.assertEqual(preflight.main(), 130)
+                self.assertEqual(run.call_count, 1)
+            result = json.loads((output / "preflight.json").read_text())
+            self.assertEqual(result["status"], "interrupted")
+            self.assertEqual(result["commands"]["git"]["stdout"], "partial output")
+            self.assertFalse(result["execution_checks_passed"])
+
     def test_overall_deadline_starts_no_more_processes(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory) / "deadline"

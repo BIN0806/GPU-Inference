@@ -55,6 +55,7 @@ limitations belong in [the validation record](../VALIDATION.md).
 - [PyTorch reference](../../python/kvlab/reference.py): checked inputs and separate prevalidated math, returning both residual and normalized outputs.
 - [Correctness cases](../../python/kvlab/correctness.py) and [matrix runner](../../scripts/check_rmsnorm_reference.py): seeded inputs, error metrics, source hashes, and failure context.
 - [GPU preflight runner](../../scripts/gpu_preflight.py): tool inventory and prepared execution/profiling probes for an existing GPU host.
+- [Native validation runner](../../scripts/check_rmsnorm_cuda.py): fresh build, complete case checks, three sanitizer gates, and retained diagnostics; [session guide](../CUDA_VALIDATION.md).
 
 Follow [the RMSNorm contract](../RMSNORM.md) before implementing a kernel. In
 particular, normalization observes the residual after storage rounding. The

@@ -103,12 +103,17 @@ jobs:
           cmake --version
           ninja --version
           printf 'Runner image: %s %s\n' "$ImageOS" "$ImageVersion"
-      - name: Compile both target architectures
+      - name: Exercise fresh-build validation runner without a GPU
         run: |
-          cmake -S . -B build/cuda -G Ninja -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DKVLAB_ENABLE_CUDA=ON -DCMAKE_CUDA_COMPILER=/tmp/kvlab-cuda/bin/nvcc -DCUDAToolkit_ROOT=/tmp/kvlab-cuda '-DCMAKE_CUDA_ARCHITECTURES=86;89'
-          cmake --build build/cuda --target rmsnorm_cuda_check --parallel 2
-      - name: Check host-only contracts without a GPU
+          python3 scripts/check_rmsnorm_cuda.py --host-only --cuda-arch 86 --cuda-compiler /tmp/kvlab-cuda/bin/nvcc --output artifacts/cuda-host --max-seconds 300
+      - name: Preserve runner diagnostics in job logs
+        if: always()
         run: |
-          readelf -d build/cuda/rmsnorm_cuda_check
-          ldd build/cuda/rmsnorm_cuda_check
-          ./build/cuda/rmsnorm_cuda_check --host-only
+          if [ -f artifacts/cuda-host/validation.json ]; then cat artifacts/cuda-host/validation.json; fi
+      - name: Check shared runtime and retain second architecture compilation
+        run: |
+          readelf -d artifacts/cuda-host/build/rmsnorm_cuda_check
+          ldd artifacts/cuda-host/build/rmsnorm_cuda_check
+          cmake -S . -B build/cuda-89 -G Ninja -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DKVLAB_ENABLE_CUDA=ON -DCMAKE_CUDA_COMPILER=/tmp/kvlab-cuda/bin/nvcc -DCUDAToolkit_ROOT=/tmp/kvlab-cuda -DCMAKE_CUDA_ARCHITECTURES=89
+          cmake --build build/cuda-89 --target rmsnorm_cuda_check --parallel 2
+          ./build/cuda-89/rmsnorm_cuda_check --host-only

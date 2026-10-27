@@ -9,11 +9,11 @@ first question partially; a generic crash is not a passing fault-detection test.
 
 | Preset | Configuration | Expected sanitizer set | Registered checks |
 |---|---|---|---:|
-| `debug` | Debug | none | 81 |
-| `release` | Release | none | 81 |
-| `asan` | Debug | address | 82 |
-| `ubsan` | Debug | undefined | 82 |
-| `asan-ubsan` | Debug | address, undefined | 82 |
+| `debug` | Debug | none | 82 |
+| `release` | Release | none | 82 |
+| `asan` | Debug | address | 83 |
+| `ubsan` | Debug | undefined | 83 |
+| `asan-ubsan` | Debug | address, undefined | 83 |
 
 `KVLAB_ENABLE_ASAN` and `KVLAB_ENABLE_UBSAN` independently select instrumentation.
 `KVLAB_SANITIZE=ON` remains a legacy alias for both. All presets explicitly clear
@@ -260,3 +260,29 @@ The local configuration also rejected missing CUDA architecture settings, and
 the Linux-only toolchain installer rejected the Mac without creating its target
 directory. Seven completed hosted jobs uploaded zero artifacts. This evidence
 follow-up changes docs only; it does not rerun or alter kernel arithmetic.
+
+
+## Chunk 09 native session preparation
+
+A new CTest group runs twelve native-session contract tests; the existing
+preflight group adds a seventh interruption regression. Current totals are
+**82 normal / 83 sanitized**. Local Debug passed 82 checks. After the final
+parser/regression additions, both affected CTest groups and their individual
+12/7-test suites passed again. Local ASan was not retried; its documented
+startup issue remains unchanged.
+
+Tests cover complete/unique case sets, malformed/nonfinite output, failed or
+interrupted processes, missing/nonzero sanitizer summaries (including race
+warnings), fail-fast sequencing, new-output-directory enforcement, source/binary
+changes, and overall deadline exhaustion. Real subprocess tests exercise
+process-group termination on timeout, SIGINT, and SIGTERM, including children
+holding inherited output pipes. GPU success records are synthetic fixtures;
+they are not retained as hardware evidence. Logs are local under
+`artifacts/validation/chunk-09/`.
+
+An actual Mac host-only attempt recorded missing nvcc, failed CMake configuration,
+exit 2, and `hardware_checks_passed=false`; no build or device command followed.
+This verifies the absence of a toolkit is a failed gate, not a successful skip.
+The Linux workflow now drives the fresh sm_86 compile/host path through the new
+runner and retains sm_89 compile/host checks. CI is pending at the implementation
+commit. No CUDA arithmetic or tolerance changed, and no GPU result is claimed.

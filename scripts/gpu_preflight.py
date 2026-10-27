@@ -1,5 +1,6 @@
 """Inventory or exercise an existing CUDA host; never provision or alter permissions."""
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -13,23 +14,47 @@ import sys
 import time
 
 
+class CommandInterrupted(KeyboardInterrupt):
+    """The interrupted command has been killed/reaped; retain its partial output."""
+    def __init__(self, record):
+        super().__init__("command interrupted")
+        self.record = record
+
+
+@contextmanager
+def termination_as_interrupt():
+    """Let CLI SIGTERM follow the same child cleanup path as Ctrl-C."""
+    def interrupt(signum, frame):
+        raise KeyboardInterrupt
+    previous = signal.signal(signal.SIGTERM, interrupt)
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
 def run_command(argv, timeout=30):
     started = time.monotonic()
     record = {"argv": [str(v) for v in argv]}
     try:
         process = subprocess.Popen(record["argv"], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                                   text=True, start_new_session=True)
+                                   text=True, errors="replace", start_new_session=True)
         try:
             stdout, stderr = process.communicate(timeout=timeout)
             record.update(status="exited", returncode=process.returncode, stdout=stdout, stderr=stderr)
-        except subprocess.TimeoutExpired:
+        except (subprocess.TimeoutExpired, KeyboardInterrupt) as error:
             # Stop compiler/profiler descendants too; a killed parent alone can leave GPU work.
             try:
                 os.killpg(process.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             stdout, stderr = process.communicate()
-            record.update(status="timed_out", returncode=None, stdout=stdout, stderr=stderr)
+            interrupted = isinstance(error, KeyboardInterrupt)
+            record.update(status="interrupted" if interrupted else "timed_out",
+                          returncode=None, stdout=stdout, stderr=stderr)
+            if interrupted:
+                record["elapsed_seconds"] = time.monotonic() - started
+                raise CommandInterrupted(record) from error
     except FileNotFoundError as error:
         record.update(status="not_installed", returncode=None, stdout="", stderr=str(error))
     except OSError as error:
@@ -87,9 +112,14 @@ def main():
         target.write_text(json.dumps(report, indent=2) + "\n")
     def run(name, argv, timeout=30):
         remaining = deadline - time.monotonic()
-        record = (run_command(argv, min(timeout, remaining)) if remaining > 0 else
-                  {"argv": list(map(str, argv)), "status": "timed_out", "returncode": None,
-                   "stdout": "", "stderr": "overall preflight deadline exhausted", "elapsed_seconds": 0})
+        try:
+            record = (run_command(argv, min(timeout, remaining)) if remaining > 0 else
+                      {"argv": list(map(str, argv)), "status": "timed_out", "returncode": None,
+                       "stdout": "", "stderr": "overall preflight deadline exhausted", "elapsed_seconds": 0})
+        except CommandInterrupted as error:
+            report["commands"][name] = error.record
+            save()
+            raise
         report["commands"][name] = record
         save()
         return record
@@ -139,6 +169,9 @@ def main():
         report["execution_checks_passed"] = all(execution.values())
         report["status"] = "execution_verified" if report["execution_checks_passed"] else "failed_execution_checks"
         return 0 if report["execution_checks_passed"] else 2
+    except KeyboardInterrupt:
+        report["status"] = "interrupted"
+        return 130
     finally:
         if report["status"] == "running":
             report["status"] = "interrupted_or_failed"
@@ -148,4 +181,5 @@ def main():
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    with termination_as_interrupt():
+        raise SystemExit(main())

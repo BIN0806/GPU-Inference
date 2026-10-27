@@ -71,6 +71,11 @@ record. It does **not** delete a rental or volume. Export artifacts, verify thei
 local copies, stop/delete resources through the provider, and verify billing
 state separately. Do not infer cleanup from an SSH disconnect or process exit.
 
+Ctrl-C and CLI SIGTERM now use the same process-group cleanup and retain partial
+command output, returning 130 with status `interrupted`. They stop later probes.
+SIGKILL, machine failure, detached processes, and uninterruptible driver work
+remain outside the guarantee; see [native session limits](CUDA_VALIDATION.md).
+
 ## Interpret compatibility evidence carefully
 
 The driver capability reported by `nvidia-smi`, nvcc's installed compiler
@@ -92,6 +97,8 @@ The inventory path and orchestration failure cases have executed on CPU. Native
 smoke compilation, CUDA launches, Triton, `torch.compile` on CUDA, memcheck,
 counters, and timeline capture are **not yet executed on hardware** in this
 project. The CUDA smoke source is preparation, not a validated GPU result.
-This script cannot establish that the still-unimplemented RMSNorm kernels are
-correct, fast, or safe across streams. A first GPU session must close these gates
-before running a performance sweep.
+This script cannot establish that the implemented unfused RMSNorm control is
+correct, fast, or safe across streams. Use the independent
+[native validation session](CUDA_VALIDATION.md) for its smoke/full matrix and
+three sanitizer gates. Native correctness does not depend on framework readiness;
+the framework preflight remains relevant before their comparison work.

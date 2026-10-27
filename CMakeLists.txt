@@ -111,7 +111,9 @@ if(BUILD_TESTING)
     -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python" -p test_rmsnorm_oracle.py)
   add_test(NAME GpuPreflightContracts COMMAND "${Python3_EXECUTABLE}"
     -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python" -p test_gpu_preflight.py)
-  set_tests_properties(RmsNormOracle GpuPreflightContracts PROPERTIES TIMEOUT 30)
+  add_test(NAME CudaValidationContracts COMMAND "${Python3_EXECUTABLE}"
+    -m unittest discover -s "${CMAKE_CURRENT_SOURCE_DIR}/tests/python" -p test_cuda_validation.py)
+  set_tests_properties(RmsNormOracle GpuPreflightContracts CudaValidationContracts PROPERTIES TIMEOUT 30)
   set(kvlab_expected_sanitizers "none")
   if(kvlab_sanitizers)
     set(kvlab_expected_sanitizers "${kvlab_sanitizer_flags}")

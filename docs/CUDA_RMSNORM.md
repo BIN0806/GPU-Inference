@@ -125,7 +125,10 @@ pointers. It does not yet stress multi-device, cross-stream dependency transfer,
 or application-level allocator lifetimes. It refuses to pass when no GPU is
 available; a compile-only runner must select `--host-only` explicitly.
 
-On an already validated GPU host, save stdout and stderr and preserve exit codes:
+Use the [bounded native session runner](CUDA_VALIDATION.md) for the complete
+fresh-build workflow and retained evidence. Its host-only mode is explicitly
+separate from actual hardware validation. For a focused manual reproduction
+on an already validated GPU host, save stdout and stderr and preserve exit codes:
 
 ```sh
 ./build/cuda/rmsnorm_cuda_check --smoke > artifacts/cuda-smoke.jsonl 2> artifacts/cuda-smoke.log

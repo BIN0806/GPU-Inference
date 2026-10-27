@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-10-26. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
+Updated 2026-10-27. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
 
 ## Envelopes
 
@@ -66,3 +66,12 @@ a new cost review. [GitHub Actions billing documentation](https://docs.github.co
 Free CI does not produce GPU performance evidence and does not release the
 first $20 rental checkpoint. Record completed hosted runs in the validation guide;
 do not describe merely queued work as completed cleanup.
+
+
+## Chunk 09 preparation
+
+Native session orchestration and cancellation tests ran locally at $0. The user
+confirmed no GPU host is available and requested workflow preparation. No
+rental, credit purchase, retained cloud volume, or paid profiling was initiated.
+Hosted CPU validation is pending at the implementation commit; record its
+completed state after the jobs finish. The first $20 checkpoint remains unopened.

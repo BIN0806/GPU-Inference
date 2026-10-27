@@ -755,3 +755,71 @@ and raw logs remain local-only. Cost remains $0.
 **Cost:** New cash outlay, accrued usage, active resources, cleanup verification, cumulative ledger link.
 
 **Learning and next action:** What is now understood? Keep, revert, simplify, proceed, or investigate—and why?
+
+
+## Entry 0014 — 2026-10-27 — Make the first native hardware session reproducible
+
+**State:** workflow implemented; local CPU checks passed; hosted validation
+pending at implementation commit; GPU work unexecuted.
+
+The next gate is executing the unfused native control, not adding another
+optimization. Manual commands require an operator to preserve exit status,
+connect case records to the intended build, run every sanitizer, and stop
+failed work. Generic GPU preflight tests a different kernel and requires
+frameworks that the standalone native library does not use. The user confirmed
+there is no GPU host yet and asked to prepare the validation workflow.
+
+Chose a small native runner sharing the existing POSIX subprocess helper rather
+than combining all framework, correctness, profiling, and rental concerns.
+[Decision 0010](decisions/0010-native-validation-gate.md) records the alternatives.
+`check_rmsnorm_cuda.py` builds in a new directory, records source/binary hashes,
+and requires explicit host-only or GPU mode. Host-only success never sets the
+hardware flag. GPU mode gates 34 smoke cases, three sanitizer smoke runs, and
+218 full cases in order. It accepts only complete unique case identities,
+finite metrics, exact residual assertions, valid indices, and expected final
+counts; numerical tolerances remain enforced by the native checker unchanged.
+
+Sanitizer reports are separated from application JSON and require a clean,
+recognized summary plus application success. Race warnings and hazards fail.
+Unknown report formats fail closed and preserve raw output for diagnosis. The
+NVIDIA manual confirms the log-file option, error exit override, race-summary
+format, and the reason to run memcheck first. Log paths escape literal percent
+characters because Compute Sanitizer interprets them independently of the shell.
+No shell-string command interpolation or tool installation was added.
+
+**Problem found by code inspection:** preflight killed child process groups on
+timeout but not KeyboardInterrupt; default SIGTERM also bypassed cleanup.
+Because children start in a new session, stopping their parent could leave
+compiler/profiler work running. Extended the shared helper to kill the group,
+reap the child, and raise an interruption carrying partial output; both CLIs
+save that record and stop. SIGTERM uses the same path as Ctrl-C. Replacement
+text decoding preserves diagnostics containing invalid byte sequences.
+
+The runner writes its JSON atomically after each command. A remaining-time
+budget caps each subprocess; no later required gate starts after failure.
+Source and binary hashes are checked again before success. These measures are
+ordinary provenance controls, not hermetic-build or tamper-proof guarantees.
+The workload deadline cannot stop provider billing, and SIGKILL, detached
+processes, or uninterruptible driver work remain documented limitations.
+
+**Executed locally:** fresh Debug configure/build and 82 CTest checks passed;
+12 new runner tests and 7 preflight tests passed, including real timeout,
+SIGINT, and SIGTERM process-group cleanup. Final affected groups passed again
+after parser/regression additions. A real host-only attempt on the Mac with
+no nvcc failed configure and retained its report; no build/device work followed.
+`py_compile` and diff whitespace checks passed. No compiler warnings appeared.
+Raw diagnostics are retained under `artifacts/validation/chunk-09/`. Synthetic
+GPU case output is confined to test fixtures and is not a device result.
+
+The standard Linux CUDA job now runs the fresh-build host-only path and prints
+its full report, while retaining compilation for sm_89 and shared-runtime loader
+checks. Other CMake modes include the new process/evidence tests. Hosted results
+will be appended after execution. Updated the session/component/development
+navigation and corrected preflight's stale claim that RMSNorm was unimplemented.
+The main README remains high-level; the standalone article remains local-only.
+
+**Learning / next gate:** a successful compiler, process exit, complete numerical
+matrix, sanitizer run, and profiler permission are different evidence. The next
+useful step is an approved, costed GPU session using the new command; examine
+failures before fusion or performance experiments. No rental was started and
+recorded spend remains $0.
