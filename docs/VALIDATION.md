@@ -233,7 +233,30 @@ a GPU. Local ASan remains the earlier unresolved host environment limitation.
 The seventh CI job compiles/links native CUDA for sm_86 and sm_89 using pinned
 NVIDIA archives on a standard CPU runner. Its `--host-only` checker validates
 linked empty/invalid paths and independent oracle witnesses with no driver.
-Those checks are pending at the implementation commit. GPU smoke/full matrices
+Those checks were pending at the implementation commit; the completed result follows below. GPU smoke/full matrices
 and Compute Sanitizer are prepared but unexecuted. Read [the CUDA guide](CUDA_RMSNORM.md)
 for the difference between host, compiler, and hardware evidence. No kernel
 performance measurement is reported.
+
+### Completed chunk 08 Linux evidence
+
+[run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616) passed at source `d0d21f2` on 2026-10-26 America/Los_Angeles.
+All five CMake configurations passed (81 normal / 82 sanitized), the Python
+reference passed 10 unit tests and 218 CPU cases, and the native CUDA job
+compiled/linked sm_86/sm_89 then passed its no-GPU host checks. Compiler/resource
+and environment details are in [the retained summary](validation/0008-linux-ci.json).
+No C++/CUDA compiler warnings or unexpected sanitizer reports appear in the
+saved logs. The existing optional NumPy warning remains in the reference job.
+
+The first run 40427429877 compiled/linked but failed loading `libcudart.so.12`
+before main. A separate fix commit selects the shared runtime consistently and
+sets an explicit build RUNPATH from the imported CUDA target. The successful
+run's `readelf` and `ldd` output shows the expected private-prefix runtime path,
+then `{"host_checks":"passed","device_execution":false}`. Initial failure
+and final success logs are retained locally; their digests appear in the summary.
+
+No GPU smoke/full cases, Compute Sanitizer, or performance tests were executed.
+The local configuration also rejected missing CUDA architecture settings, and
+the Linux-only toolchain installer rejected the Mac without creating its target
+directory. Seven completed hosted jobs uploaded zero artifacts. This evidence
+follow-up changes docs only; it does not rerun or alter kernel arithmetic.

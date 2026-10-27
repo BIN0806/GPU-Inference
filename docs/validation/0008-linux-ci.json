@@ -1,0 +1,95 @@
+{
+  "source_commit": "d0d21f271817fa1052332defa3b4211f7bf61992",
+  "run_url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616",
+  "completed_utc": "2026-10-27T00:41:58Z",
+  "jobs": [
+    {
+      "name": "cuda-compile",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937847783"
+    },
+    {
+      "name": "rmsnorm-reference",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937847960"
+    },
+    {
+      "name": "validate (release)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937847973"
+    },
+    {
+      "name": "validate (asan-ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937848040"
+    },
+    {
+      "name": "validate (debug)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937848069"
+    },
+    {
+      "name": "validate (asan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937848107"
+    },
+    {
+      "name": "validate (ubsan)",
+      "conclusion": "success",
+      "url": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616/job/121937848162"
+    }
+  ],
+  "ctest_counts": {
+    "validate (release)": 81,
+    "validate (asan-ubsan)": 82,
+    "validate (debug)": 81,
+    "validate (asan)": 82,
+    "validate (ubsan)": 82
+  },
+  "reference_unit_tests": 10,
+  "reference_cpu_cases": 218,
+  "cuda_compile": {
+    "nvcc": "12.8.93",
+    "targets": [
+      "sm_86",
+      "sm_89"
+    ],
+    "host_checks": "passed",
+    "device_execution": false,
+    "runpath": "/tmp/kvlab-cuda/lib",
+    "compiler_resources_per_arch": {
+      "residual_add_float32": {
+        "registers": 14
+      },
+      "residual_add_float16": {
+        "registers": 13
+      },
+      "rmsnorm_float32": {
+        "registers": 28,
+        "shared_bytes": 512
+      },
+      "rmsnorm_float16": {
+        "registers": 27,
+        "shared_bytes": 512
+      }
+    },
+    "spill_stores_bytes": 0,
+    "spill_loads_bytes": 0
+  },
+  "environment": {
+    "runner_image": "ubuntu24 20261023.334.3",
+    "compiler": "GCC 13.3.0",
+    "cmake": "3.31.6",
+    "ninja": "1.13.2",
+    "python": "3.12.3"
+  },
+  "first_failed_run": "https://github.com/BIN0806/GPU-Inference/actions/runs/40427429877",
+  "resolved_failure": "Private-prefix libcudart.so.12 not found before main; explicit shared runtime and build RUNPATH fixed loading.",
+  "artifact_upload_count": 0,
+  "combined_log_sha256": "30c3f7f3a4637f7e595578647edb29959d25b5ad317d960a07f948d53cd42dc6",
+  "first_cuda_job_log_sha256": "51cc8b521d3131eaa9237bc4d54a80aa1904007ddadacc108414cffe8d951088",
+  "limitations": [
+    "No GPU numerical, memory, race, synchronization, or performance results",
+    "Compiler resource reports are not hardware measurements"
+  ]
+}

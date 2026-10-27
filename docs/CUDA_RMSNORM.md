@@ -1,7 +1,7 @@
 # Unfused CUDA residual + RMSNorm control
 
-Status: source implemented; CPU descriptor tests executed; native CUDA
-compile/link and host-only runner checks pending at the implementation commit.
+Status: implemented; local and Linux CPU checks passed. Native CUDA compile/link
+and host-only runner checks passed in [run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616).
 **GPU correctness, Compute Sanitizer, and performance remain untested.** This is
 the separate-kernel control for a future fusion experiment, not a fused kernel,
 framework binding, or complete transformer block.
@@ -142,3 +142,23 @@ alone does not satisfy the Phase 2 correctness or performance milestone.
 
 References: [NVIDIA stream API](https://docs.nvidia.com/cuda/archive/12.8.1/cuda-runtime-api/group__CUDART__STREAM.html)
 and [block synchronization](https://docs.nvidia.com/cuda/archive/12.8.1/cuda-c-programming-guide/index.html#synchronization-functions).
+
+## Executed compiler and host evidence
+
+At source `d0d21f2`, all seven Linux jobs passed: Debug/Release 81 each; ASan,
+UBSan, combined 82 each; the unchanged Python reference 10 tests and 218 CPU
+cases; and native CUDA compile/link plus host-only checks. CUDA 12.8.93 compiled
+sm_86/sm_89 with GCC 13.3.0. [Summary and job links](validation/0008-linux-ci.json).
+
+The initial native build linked successfully but exited before main because its
+private-prefix `libcudart.so.12` was not discoverable. The checker now has an
+explicit build RUNPATH derived from `CUDA::cudart` and consistently uses the
+shared runtime. `readelf` and `ldd` verified `/tmp/kvlab-cuda/lib`; the same
+host-only mode then passed. This closes the loader issue, not the GPU gate.
+
+For both compiled architectures, ptxas reported 14/13 registers for FP32/FP16
+addition and 28/27 for FP32/FP16 normalization, with 512 bytes shared memory for
+normalization. All eight compiled kernel variants reported zero spill stores
+and loads. These are compiler resource reports, not achieved occupancy,
+bandwidth, or runtime performance. The next gate remains actual smoke/full GPU
+execution and Compute Sanitizer before implementing fusion.

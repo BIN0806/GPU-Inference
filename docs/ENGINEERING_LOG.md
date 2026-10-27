@@ -650,8 +650,8 @@ and experimental evidence remain discoverable through the documentation index.
 
 ## Entry 0013 — 2026-10-26 — Establish the unfused CUDA control
 
-**State:** source implemented; local CPU descriptors tested; native CI pending;
-no device execution or timing claim.
+**State:** implemented; local/Linux CPU tests and native compile/link/host checks
+passed; no device execution or timing claim.
 
 The next comparison needs a native CUDA baseline that visibly stores the rounded
 residual before normalization. Implement two kernels, caller-owned disjoint
@@ -706,6 +706,31 @@ installation or an assumed user's environment variable. The CI step now records
 `readelf`/`ldd` diagnostics before executing the same host checks. Preserve the
 first failed job log locally. The fix awaits a fresh Linux run; CPU-only code
 and numerical kernel arithmetic are unchanged.
+
+### Resolved loader failure and completed Linux validation
+
+[run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616) passed at `d0d21f2`: all seven jobs completed. Debug/Release pass 81 each,
+all three Linux sanitizer modes pass 82, and the unchanged Python reference
+passes 10 unit tests plus 218 CPU cases. Native CUDA compiled for sm_86/sm_89,
+linked, resolved its private runtime through the new RUNPATH, and executed the
+host-only checks successfully. No kernel arithmetic change or tolerance widening
+was needed. `readelf`/`ldd` confirms `/tmp/kvlab-cuda/lib/libcudart.so.12` resolution.
+
+The saved [summary](validation/0008-linux-ci.json) identifies tested source,
+job links, environment, failed/successful log digests, and compiler resources.
+Both targets report 14/13 registers for FP32/FP16 add, 28/27 for normalization,
+512 shared bytes for normalization, and no spills. These are static compiler
+reports, not performance or occupancy measurements. No C++/CUDA warnings or
+unexpected sanitizer findings were present; the earlier optional NumPy warning
+remains. All seven jobs ended; no artifacts were uploaded and no GPU was rented.
+
+Also executed the local negative setup checks: missing explicit architectures
+fail before CUDA setup, and the Linux-only toolchain installer rejects macOS
+without creating its destination. The no-GPU compile path is now demonstrated;
+GPU numerical, memcheck/racecheck/synccheck, and lifetime behavior still require
+actual hardware. Keep the unfused control and defer fusion/bindings until that
+next gate. The root README retains only the capability change. Blog part 08
+and raw logs remain local-only. Cost remains $0.
 
 ## Entry template — copy for each session
 

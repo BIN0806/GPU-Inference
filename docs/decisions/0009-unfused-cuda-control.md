@@ -1,7 +1,7 @@
 # ADR 0009 — Standalone unfused CUDA control before bindings and fusion
 
-Date: 2026-10-26. Status: implemented; host descriptors tested; native compilation
-and hardware checks pending at the initial commit.
+Date: 2026-10-26. Status: implemented; CPU descriptors, native compilation, and
+host-only checks passed in [run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616). Hardware checks remain pending.
 
 Start with separate residual-add and RMSNorm launches, both using caller-owned
 buffers on an explicit stream. Store and reload the rounded residual so the

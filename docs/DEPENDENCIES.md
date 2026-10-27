@@ -1,4 +1,4 @@
-# Dependencies for the CPU implementation (through chunk 08)
+# Dependencies (through chunk 08)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -132,5 +132,6 @@ binary is committed. [NVIDIA redistributables](https://developer.download.nvidia
 The selected compiler supports the intended sm_86/sm_89 targets. This is a pinned
 compile environment, not a claim to use the newest CUDA release or a verified
 rental image. Actual GPU driver/runtime/framework compatibility still requires
-[preflight](GPU_PREFLIGHT.md). Linux compilation and host-only execution are
-pending at the implementation commit; all GPU execution remains untested.
+[preflight](GPU_PREFLIGHT.md). Linux compilation and host-only execution passed in [run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616); all GPU execution
+remains untested. The checker uses a build RUNPATH to locate the runtime in a
+private toolkit prefix; no system loader configuration is changed.

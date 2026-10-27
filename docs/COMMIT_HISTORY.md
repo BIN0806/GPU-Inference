@@ -11,7 +11,7 @@ The repository preserves independently buildable implementation chunks:
 | 05 | `ci: verify sanitizer instrumentation and Linux CPU tests (chunk 05)` | 69/69 locally and Linux; all 3 Linux sanitizer modes 70/70 |
 | 06 | `perf(allocator): reuse request-table storage with suffix rollback (chunk 06)` | 73/73 local and Linux Debug/Release; all Linux sanitizer modes 74/74; 54 paired observations |
 | 07 | `feat(rmsnorm): add rounded-residual references and GPU preflight (chunk 07)` | 75/75 Debug/Release local and Linux; 76/76 all Linux sanitizer modes; 10 reference tests and 218 CPU cases on both hosts |
-| 08 | `feat(cuda): add unfused residual and RMSNorm controls (chunk 08)` | 81/81 local Debug/Release, 82/82 UBSan; native compiler and hardware gates tracked in the CUDA guide |
+| 08 | `feat(cuda): add unfused residual and RMSNorm controls (chunk 08)` | 81/81 Debug/Release local and Linux; 82/82 Linux sanitizer modes; sm_86/sm_89 compilation and native host checks pass; GPU untested |
 
 The history was initially reconstructed from validated delivery snapshots.
 At the user's request, all three commits were subsequently rewritten to
