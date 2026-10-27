@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-10-25. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
+Updated 2026-10-26. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
 
 ## Envelopes
 
@@ -30,6 +30,7 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 05 | 2026-10-25 | Local CPU and standard public-repository GitHub Actions | $0 | $0 | $0 | N/A | All 5 jobs in run 40172396157 completed; artifact count 0; no GPU or persistent volume | Sanitizer probes and Linux validation |
 | Chunk 06 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | 108 local processes and all 5 jobs in run 40232916754 completed; artifact count 0; no GPU | Request growth tests and paired host-memory/time comparison |
 | Chunk 07 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 6 jobs in run 40270856228 completed; artifact count 0; no GPU or persistent volume | 218 reference cases locally and Linux, C++/sanitizer tests, and local tool inventory |
+| Chunk 08 preparation | 2026-10-26 | Local CPU; standard Linux compile-only CI planned | $0 | $0 | $0 | N/A | No GPU or persistent volume created | Native CUDA source, host contracts, compiler validation pending |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
@@ -57,7 +58,7 @@ The repository was verified public before enabling CI. GitHub states that
 standard hosted runners are free for public repositories; workflow logs and job
 summaries do not count against artifact storage. This workflow uses only the
 standard Ubuntu runner, with no Actions cache or artifact uploads. It has a
-10-minute per-job timeout, at most two concurrent matrix jobs plus one independent CPU reference job,
+10-minute per-job timeout, at most two concurrent matrix jobs plus independent CPU reference and CUDA compile jobs,
 and cancels older runs on the same ref. A job guard skips execution if the repository is private.
 Larger runners, GPU services, paid storage, and a future visibility change need
 a new cost review. [GitHub Actions billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions).

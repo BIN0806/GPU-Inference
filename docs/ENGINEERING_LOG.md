@@ -648,6 +648,49 @@ reorganization, not a new implementation installment.
 The README now answers what the project is and how to start. Detailed history
 and experimental evidence remain discoverable through the documentation index.
 
+## Entry 0013 — 2026-10-26 — Establish the unfused CUDA control
+
+**State:** source implemented; local CPU descriptors tested; native CI pending;
+no device execution or timing claim.
+
+The next comparison needs a native CUDA baseline that visibly stores the rounded
+residual before normalization. Implement two kernels, caller-owned disjoint
+buffers, an explicit stream, and a CPU-testable descriptor contract. Keep the
+allocator independent of CUDA and keep CMake CUDA support optional. A standalone
+correctness runner precedes framework bindings and fusion. Compile-only Linux
+CI can detect toolchain/source errors without renting a GPU; it cannot establish
+numerical correctness, race freedom, profiler access, or speed.
+
+The selected first reduction is a 128-thread shared-memory tree with every
+thread participating in every barrier, including widths smaller than a block.
+Use wide flattened indices, FP32 arithmetic, explicit FP16 storage rounding,
+and no fast-math. The launch wrapper checks descriptors, device identity, and
+stream identity without owning or synchronizing buffers. Value bounds and
+truthful capacities remain caller preconditions; return success means enqueue
+success, not completion. A failure after the first launch can leave work pending.
+
+### Local verification and review
+
+Fresh Debug/Release each pass 81 checks; UBSan passes 82, with no compiler
+warnings. Six new descriptor tests establish invalid shapes/types, empty
+batches, short/null/misaligned buffers, aliasing, wide sizes, and address overflow.
+These tests do not dereference synthetic addresses or emulate GPU execution.
+
+The native checker now provides host-only, 34-case smoke, and 218-case full
+modes. Its independent FP64 host oracle uses direct double-to-half rounding;
+manual and rounded-residual witnesses cross-check its semantics. It exercises
+same non-default-stream copies/launches/checks and keeps owners alive through
+completion, including exception cleanup. Its random inputs differ from PyTorch's,
+so matching shape counts do not mean identical datasets. These native paths have
+not yet been compiled or run; Linux compile/link and host-only CI is the next gate.
+
+NVIDIA's pinned 12.8.1 manifest and downloaded cudart header confirm the
+`cudaStreamGetDevice` API and direct double-to-half conversion. Added a minimal
+hash-checked user-prefix toolchain installer for standard Linux CI; no driver,
+GPU, profiler, or framework installation. The existing C++ allocator and Python
+numerical reference are unchanged. Root README edits are limited to capabilities;
+detailed state lives in modular docs. No GPU rental or performance experiment.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

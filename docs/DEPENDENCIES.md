@@ -1,4 +1,4 @@
-# Dependencies for the CPU implementation (through chunk 07)
+# Dependencies for the CPU implementation (through chunk 08)
 
 | Component | Requirement / pin | Purpose |
 |---|---|---|
@@ -112,3 +112,25 @@ Do not install them over a rented GPU environment. The remote driver, toolkit,
 PyTorch CUDA wheel, Triton, and profiler tuple still needs selection and actual
 execution. [Reference setup](RMSNORM.md), [preflight](GPU_PREFLIGHT.md),
 [official PyTorch package metadata](https://pypi.org/pypi/torch/json).
+
+## Chunk 08 optional native CUDA build
+
+The default CPU build is unchanged. `KVLAB_ENABLE_CUDA=ON` requires Linux,
+a supported host compiler, CUDA Toolkit 12.8+, and explicit numeric architecture
+settings. The standalone library/checker has no PyTorch dependency. Host
+sanitizers do not instrument CUDA kernels.
+
+The compile-only CI job uses NVIDIA's official 12.8.1 redistributable manifest:
+nvcc 12.8.93, cudart 12.8.90, and CCCL 12.8.90. The
+[installer](../scripts/install_cuda_compile_toolchain.sh) pins each archive's
+SHA-256, preserves component license notices, and merges them into a new temporary
+prefix. Approximately 81.3 MB of compressed archives are downloaded. No driver,
+profiler, framework, or system package is installed. CUDA Toolkit licensing and
+third-party notices remain in the extracted distribution; no NVIDIA source or
+binary is committed. [NVIDIA redistributables](https://developer.download.nvidia.com/compute/cuda/redist/redistrib_12.8.1.json).
+
+The selected compiler supports the intended sm_86/sm_89 targets. This is a pinned
+compile environment, not a claim to use the newest CUDA release or a verified
+rental image. Actual GPU driver/runtime/framework compatibility still requires
+[preflight](GPU_PREFLIGHT.md). Linux compilation and host-only execution are
+pending at the implementation commit; all GPU execution remains untested.

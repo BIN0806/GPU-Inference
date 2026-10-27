@@ -12,6 +12,7 @@ from implemented behavior and measured results.
 | [Dependencies](DEPENDENCIES.md) | Compiler/build requirements, pinned dependencies, offline setup, and optional Python environments. |
 | [Development guide](development/README.md) | Source-code map, allocator ownership rules, examples, and the implementation sequence. |
 | [Residual + RMSNorm](RMSNORM.md) | Supported inputs, rounding semantics, reference setup, and numerical correctness results. |
+| [Unfused CUDA control](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
 | [GPU preflight](GPU_PREFLIGHT.md) | Toolchain and profiling checks on an existing GPU host, with inventory kept separate from successful execution. |
 | [CPU benchmarks](BENCHMARKS.md) | Workload configuration, measurement boundaries, output schemas, and interpretation. |
 | [Validation](VALIDATION.md) | Test/sanitizer modes, executed local and hosted checks, and known environment limitations. |
@@ -21,6 +22,7 @@ from implemented behavior and measured results.
 - [Engineering roadmap](../ROADMAP.md): target architecture, prerequisites, phases, experiments, and decision gates. It is a design baseline, not evidence of completed work.
 - [System scope and lifetime](decisions/0001-scope-and-lifetime.md): CPU/GPU responsibilities and the intended system boundary.
 - Allocator decisions: [page-pool contract](decisions/0002-first-page-pool-contract.md), [sealed pages and leases](decisions/0003-sealed-pages-and-leases.md), [request transactions](decisions/0004-request-transactions.md), and [request-table growth](decisions/0007-request-table-growth.md).
+- [Unfused CUDA control](decisions/0009-unfused-cuda-control.md): standalone kernels, shared reduction, and compile-only CI boundaries.
 - Numerical and validation decisions: [RMSNorm contract](decisions/0008-rmsnorm-contract.md), [CPU measurement](decisions/0005-cpu-workload-measurement.md), and [sanitizer validation](decisions/0006-sanitizer-validation.md).
 
 ## Experiments and evidence

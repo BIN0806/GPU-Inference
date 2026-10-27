@@ -1,8 +1,9 @@
 # Residual + RMSNorm: first numerical contract
 
 Chunk 07 implements a standard-library oracle and eager PyTorch reference.
-It does not implement the fused/unfused CUDA normalization kernels, Triton
-normalization, or an end-to-end model. GPU execution of the references remains
+The separate [native CUDA control](CUDA_RMSNORM.md) now has its own implementation
+and validation boundary. Fused CUDA, Triton normalization, and an end-to-end model
+remain outside the implemented scope. GPU execution of the references remains
 untested until a real device session. [ADR 0008](decisions/0008-rmsnorm-contract.md)
 records the alternatives and scope.
 
@@ -131,7 +132,7 @@ hardware profiler result is established by this CPU matrix.
 
 ## Next implementation gate
 
-Build the separate CUDA add and RMSNorm controls before the fused kernel.
+Validate the separate [CUDA add and RMSNorm controls](CUDA_RMSNORM.md) on hardware before the fused kernel.
 Make the rounded residual store/reload visible in the first version. Test empty
 batches and masked odd-width tails, inspect `z` before `y`, and preserve FP32
 accumulation. Then compare identical two-output work with eager, compiled,

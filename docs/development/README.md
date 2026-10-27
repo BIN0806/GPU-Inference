@@ -58,8 +58,8 @@ limitations belong in [the validation record](../VALIDATION.md).
 
 Follow [the RMSNorm contract](../RMSNORM.md) before implementing a kernel. In
 particular, normalization observes the residual after storage rounding. The
-next kernel work is separate CUDA add and RMSNorm controls, followed by a fused
-implementation of the same two-output operation. Device execution and profiling
+[standalone CUDA control](../CUDA_RMSNORM.md) now implements separate add and
+RMSNorm kernels. Validate those on hardware before fusion or framework bindings. Device execution and profiling
 remain unverified until tested on NVIDIA hardware; see [the preflight guide](../GPU_PREFLIGHT.md).
 
 ## Run a CPU experiment

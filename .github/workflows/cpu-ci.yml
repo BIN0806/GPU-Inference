@@ -84,3 +84,28 @@ jobs:
         run: PYTHONPATH=python /tmp/kvlab-reference/bin/python -m unittest discover -s tests/python -p 'test_rmsnorm_*.py' -v
       - name: Check the full CPU shape and dtype matrix
         run: /tmp/kvlab-reference/bin/python scripts/check_rmsnorm_reference.py --output artifacts/rmsnorm-cpu
+
+  cuda-compile:
+    # Standard CPU runner: compile/link and host-only checks, no GPU correctness claim.
+    if: github.event.repository.private == false
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Prepare pinned compiler without a GPU driver
+        run: bash scripts/install_cuda_compile_toolchain.sh /tmp/kvlab-cuda
+      - name: Record host environment
+        run: |
+          g++ --version
+          cmake --version
+          ninja --version
+          printf 'Runner image: %s %s\n' "$ImageOS" "$ImageVersion"
+      - name: Compile both target architectures
+        run: |
+          cmake -S . -B build/cuda -G Ninja -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DKVLAB_ENABLE_CUDA=ON -DCMAKE_CUDA_COMPILER=/tmp/kvlab-cuda/bin/nvcc -DCUDAToolkit_ROOT=/tmp/kvlab-cuda '-DCMAKE_CUDA_ARCHITECTURES=86;89'
+          cmake --build build/cuda --target rmsnorm_cuda_check --parallel 2
+      - name: Check host-only contracts without a GPU
+        run: ./build/cuda/rmsnorm_cuda_check --host-only

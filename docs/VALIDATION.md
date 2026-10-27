@@ -9,11 +9,11 @@ first question partially; a generic crash is not a passing fault-detection test.
 
 | Preset | Configuration | Expected sanitizer set | Registered checks |
 |---|---|---|---:|
-| `debug` | Debug | none | 75 |
-| `release` | Release | none | 75 |
-| `asan` | Debug | address | 76 |
-| `ubsan` | Debug | undefined | 76 |
-| `asan-ubsan` | Debug | address, undefined | 76 |
+| `debug` | Debug | none | 81 |
+| `release` | Release | none | 81 |
+| `asan` | Debug | address | 82 |
+| `ubsan` | Debug | undefined | 82 |
+| `asan-ubsan` | Debug | address, undefined | 82 |
 
 `KVLAB_ENABLE_ASAN` and `KVLAB_ENABLE_UBSAN` independently select instrumentation.
 `KVLAB_SANITIZE=ON` remains a legacy alias for both. All presets explicitly clear
@@ -220,3 +220,20 @@ JSON was generated but not uploaded, so only its printed aggregate metrics are
 retained from that runner. Local per-case data remains available above. This
 follow-up changes documentation/evidence only; executable source and workflow
 are identical to the tested implementation commit. No GPU result is inferred.
+
+## Chunk 08 native CUDA preparation
+
+Six new C++ descriptor tests bring the current CTest totals to **81 normal /
+82 sanitized**. Fresh local Debug/Release pass 81 each and UBSan passes 82,
+including the first-party source audit. No compiler warnings appeared. These
+checks exercise shape/type rejection, empty no-ops, byte capacities, alignment,
+all-buffer overlap, address overflow, and wide element counts without touching
+a GPU. Local ASan remains the earlier unresolved host environment limitation.
+
+The seventh CI job compiles/links native CUDA for sm_86 and sm_89 using pinned
+NVIDIA archives on a standard CPU runner. Its `--host-only` checker validates
+linked empty/invalid paths and independent oracle witnesses with no driver.
+Those checks are pending at the implementation commit. GPU smoke/full matrices
+and Compute Sanitizer are prepared but unexecuted. Read [the CUDA guide](CUDA_RMSNORM.md)
+for the difference between host, compiler, and hardware evidence. No kernel
+performance measurement is reported.
