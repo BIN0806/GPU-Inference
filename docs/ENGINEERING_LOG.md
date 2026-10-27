@@ -691,6 +691,22 @@ GPU, profiler, or framework installation. The existing C++ allocator and Python
 numerical reference are unchanged. Root README edits are limited to capabilities;
 detailed state lives in modular docs. No GPU rental or performance experiment.
 
+### First Linux run: compilation passed, loader failed
+
+[Run 40427429877](https://github.com/BIN0806/GPU-Inference/actions/runs/40427429877)
+at `c672e00` compiled both kernels and the checker for sm_86/sm_89 and linked
+successfully using nvcc 12.8.93 / GCC 13.3.0. The host-only executable then exited
+127 before main: `libcudart.so.12` could not be found by the loader. This is a
+runtime-library discovery failure in the private CI toolchain prefix; no host
+oracle or GPU kernel result is implied by compilation.
+
+Add an explicit build RPATH derived from the imported CUDA runtime target and
+select the shared runtime consistently. Do not hide the issue with a system
+installation or an assumed user's environment variable. The CI step now records
+`readelf`/`ldd` diagnostics before executing the same host checks. Preserve the
+first failed job log locally. The fix awaits a fresh Linux run; CPU-only code
+and numerical kernel arithmetic are unchanged.
+
 ## Entry template — copy for each session
 
 ### Entry NNNN — YYYY-MM-DD — Specific engineering question

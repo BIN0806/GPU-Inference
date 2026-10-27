@@ -108,4 +108,7 @@ jobs:
           cmake -S . -B build/cuda -G Ninja -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DKVLAB_ENABLE_CUDA=ON -DCMAKE_CUDA_COMPILER=/tmp/kvlab-cuda/bin/nvcc -DCUDAToolkit_ROOT=/tmp/kvlab-cuda '-DCMAKE_CUDA_ARCHITECTURES=86;89'
           cmake --build build/cuda --target rmsnorm_cuda_check --parallel 2
       - name: Check host-only contracts without a GPU
-        run: ./build/cuda/rmsnorm_cuda_check --host-only
+        run: |
+          readelf -d build/cuda/rmsnorm_cuda_check
+          ldd build/cuda/rmsnorm_cuda_check
+          ./build/cuda/rmsnorm_cuda_check --host-only

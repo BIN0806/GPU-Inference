@@ -21,12 +21,14 @@ if(KVLAB_ENABLE_CUDA)
   add_library(kvlab_cuda STATIC src/kernels/residual_rmsnorm.cu)
   target_include_directories(kvlab_cuda PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
   target_link_libraries(kvlab_cuda PUBLIC CUDA::cudart)
-  set_target_properties(kvlab_cuda PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON)
+  set_target_properties(kvlab_cuda PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON CUDA_RUNTIME_LIBRARY Shared)
   target_compile_options(kvlab_cuda PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:-lineinfo;--fmad=false;--ftz=false;-Xptxas=-v>")
   # Built without a GPU; running it is a separate explicit hardware validation gate.
   add_executable(rmsnorm_cuda_check tests/cuda/rmsnorm_cuda_check.cu)
   target_link_libraries(rmsnorm_cuda_check PRIVATE kvlab_cuda)
-  set_target_properties(rmsnorm_cuda_check PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON)
+  set_target_properties(rmsnorm_cuda_check PROPERTIES CUDA_STANDARD 17 CUDA_STANDARD_REQUIRED ON CUDA_RUNTIME_LIBRARY Shared)
+  # A private toolkit prefix is not necessarily in the host loader's search path.
+  set_target_properties(rmsnorm_cuda_check PROPERTIES BUILD_RPATH "$<TARGET_FILE_DIR:CUDA::cudart>")
   target_compile_options(rmsnorm_cuda_check PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:--fmad=false;--ftz=false>")
 endif()
 
