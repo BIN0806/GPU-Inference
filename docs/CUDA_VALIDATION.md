@@ -127,5 +127,9 @@ cleanup. Success/failure GPU records in these tests are explicitly synthetic.
 The Linux workflow now exercises a real fresh sm_86 build through host-only
 mode, retains sm_89 compilation, and prints the complete host report in its log.
 It passed in [run 40469386543](https://github.com/BIN0806/GPU-Inference/actions/runs/40469386543) at source `a72a702`. All seven Linux jobs passed (82 normal / 83 sanitized CTest checks; 10 reference tests and 218 CPU cases).
-[Retained summary](validation/0009-linux-ci.json). No GPU host is available yet;
-native hardware execution, Compute Sanitizer, and performance remain untested.
+[Retained summary](validation/0009-linux-ci.json).
+
+The first Modal L4 run returned `hardware_verified` for revision `48ed530`
+on November 23, 2026. It passed all 34 smoke cases, all three sanitizer
+passes on that matrix, and all 218 full cases.
+[Hardware summary](validation/0010-modal-l4.json) · [Reproduce on Modal](MODAL.md).

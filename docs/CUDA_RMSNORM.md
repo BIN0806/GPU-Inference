@@ -1,10 +1,8 @@
 # Unfused CUDA residual + RMSNorm control
 
-Status: implemented; local and Linux CPU checks passed. Native CUDA compile/link
-and host-only runner checks passed in [run 40427805616](https://github.com/BIN0806/GPU-Inference/actions/runs/40427805616).
-**GPU correctness, Compute Sanitizer, and performance remain untested.** This is
-the separate-kernel control for a future fusion experiment, not a fused kernel,
-framework binding, or complete transformer block.
+The unfused CUDA control passed the numerical matrix and Compute Sanitizer
+checks on an NVIDIA L4. It provides the comparison baseline for fusion.
+[Hardware evidence](validation/0010-modal-l4.json).
 
 ## Interfaces and responsibilities
 
@@ -138,10 +136,10 @@ compute-sanitizer --tool synccheck --error-exitcode 99 ./build/cuda/rmsnorm_cuda
 ./build/cuda/rmsnorm_cuda_check --full > artifacts/cuda-full.jsonl 2> artifacts/cuda-full.log
 ```
 
-Create `artifacts/` first and choose fresh output names. These commands are
-prepared, **not executed hardware results**. Use [GPU preflight](GPU_PREFLIGHT.md)
-and [budget/session accounting](BUDGET.md) before a paid session. Compilation
-alone does not satisfy the Phase 2 correctness or performance milestone.
+Create `artifacts/` first and choose fresh output names. The Modal session
+executed the corresponding gates through the native runner. See the
+[GPU preflight](GPU_PREFLIGHT.md) for profiler readiness and the
+[budget ledger](BUDGET.md) for session accounting.
 
 References: [NVIDIA stream API](https://docs.nvidia.com/cuda/archive/12.8.1/cuda-runtime-api/group__CUDART__STREAM.html)
 and [block synchronization](https://docs.nvidia.com/cuda/archive/12.8.1/cuda-c-programming-guide/index.html#synchronization-functions).
@@ -162,6 +160,15 @@ host-only mode then passed. This closes the loader issue, not the GPU gate.
 For both compiled architectures, ptxas reported 14/13 registers for FP32/FP16
 addition and 28/27 for FP32/FP16 normalization, with 512 bytes shared memory for
 normalization. All eight compiled kernel variants reported zero spill stores
-and loads. These are compiler resource reports, not achieved occupancy,
-bandwidth, or runtime performance. The next gate remains actual smoke/full GPU
-execution and Compute Sanitizer before implementing fusion.
+and loads. These reports describe static compiler resource usage.
+
+## Executed L4 evidence
+
+On November 23, 2026 the native runner built revision `48ed530` on Modal for
+`sm_89`. It passed the 34-case smoke suite and the 218-case full FP16/FP32
+matrix. Every residual matched the oracle bitwise. The maximum normalized
+output absolute errors were 0.00390625 in FP16 and 9.536743e-7 in FP32.
+All elements passed the existing absolute-plus-relative tolerance. Memcheck,
+racecheck, and synccheck each passed the smoke suite with zero reported errors.
+Racecheck also reported zero hazards and warnings. Kernel timings and Nsight
+counter access remain open. [Case and environment summary](validation/0010-modal-l4.json).

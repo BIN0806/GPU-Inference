@@ -58,3 +58,12 @@ can still reschedule a preempted function. Reconcile gross usage and applied
 credits separately. Starter advertises $30 monthly compute credit. Available
 credit and actual charges depend on the workspace.
 [Modal pricing](https://modal.com/pricing) · [Preemption](https://modal.com/docs/guide/preemption).
+
+## First execution on November 23, 2026
+
+The pinned image built and Modal started one L4 call after about 146 seconds
+in the capacity queue. The call took 13.84 seconds including native build and
+checks. It exported its report and the App stopped with zero active containers.
+All numerical and Compute Sanitizer gates passed. These elapsed times describe
+the session and include subprocess overhead. Nsight counters and repeatable
+performance timings still need measurements. [Evidence](validation/0010-modal-l4.json).

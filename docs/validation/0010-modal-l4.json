@@ -1,0 +1,100 @@
+{
+  "experiment": "modal-l4-001",
+  "source_commit": "48ed5301e1a9344f6326b6169e936c24add184a0",
+  "adapter_commit": "f4623d1cd31100dc7183d9cfc3f826ba3d28633c",
+  "hardware_checks_passed": true,
+  "arch": "89",
+  "environment": {
+    "gpu": "NVIDIA L4",
+    "driver": "610.57.04",
+    "reported_memory_mib": 23034,
+    "nvcc": "12.8.93",
+    "compute_sanitizer": "2025.1.0.0",
+    "cmake": "3.28.3",
+    "ninja": "1.11.1",
+    "base_image": "nvidia/cuda@sha256:4b9ed5fa8361736996499f64ecebf25d4ec37ff56e4d11323ccde10aa36e0c43"
+  },
+  "started_utc": "2026-11-23T19:56:22.510631+00:00",
+  "finished_utc": "2026-11-23T19:56:36.245953+00:00",
+  "modal_call_seconds": 13.839366,
+  "checks": {
+    "configure": true,
+    "build": true,
+    "host": true,
+    "smoke": true,
+    "memcheck": true,
+    "racecheck": true,
+    "synccheck": true,
+    "full": true,
+    "sources_unchanged": true,
+    "binary_unchanged": true
+  },
+  "smoke": {
+    "cases": 34,
+    "by_dtype": {
+      "float16": {
+        "cases": 17,
+        "bitwise_equal_cases": 17,
+        "max_abs_error": 0,
+        "max_normalized_rms_error": 0
+      },
+      "float32": {
+        "cases": 17,
+        "bitwise_equal_cases": 17,
+        "max_abs_error": 2.384185791015625e-07,
+        "max_normalized_rms_error": 1.1546886768803498e-07
+      }
+    }
+  },
+  "full": {
+    "cases": 218,
+    "by_dtype": {
+      "float16": {
+        "cases": 109,
+        "bitwise_equal_cases": 109,
+        "max_abs_error": 0.00390625,
+        "max_normalized_rms_error": 8.108461613847462e-05
+      },
+      "float32": {
+        "cases": 109,
+        "bitwise_equal_cases": 109,
+        "max_abs_error": 9.5367431640625e-07,
+        "max_normalized_rms_error": 1.1546886768803498e-07
+      }
+    }
+  },
+  "compute_sanitizer": {
+    "memcheck": {
+      "cases": 34,
+      "returncode": 0,
+      "summary": "ERROR SUMMARY: 0 errors"
+    },
+    "racecheck": {
+      "cases": 34,
+      "returncode": 0,
+      "summary": "RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)"
+    },
+    "synccheck": {
+      "cases": 34,
+      "returncode": 0,
+      "summary": "ERROR SUMMARY: 0 errors"
+    }
+  },
+  "source_sha256": {
+    "CMakeLists.txt": "e4ee8502093f6539c02e23eeaf3a4aef4a55d812997e8bfd86a73cde812a2ac9",
+    "include/kvlab/rmsnorm_contract.hpp": "839f5a08d26affc7f967c0f212256e168f574157bf6edad2b7aa0924c8617aac",
+    "include/kvlab/rmsnorm_cuda.hpp": "e84059db251d2372baee409e800c4824f4c178adb971d84de2f6730df10bd8c4",
+    "src/kernels/residual_rmsnorm.cu": "c8e288d75f7f50501ee3613b212498dd265d4f1154946d738c69375934bf8675",
+    "tests/cuda/rmsnorm_cuda_check.cu": "4a89f09a9f11296448fc0537f7a68dd69c927ed891b6f9cd5646936fbb9a873b",
+    "scripts/check_rmsnorm_cuda.py": "d8594ce09e3883ffe0dcf3a18083ed15fa2d8414e7fbe2328e0ba32b9e4a78c5",
+    "scripts/gpu_preflight.py": "75630b3a7fcefd2b8834846ba4d6ebe48435416352dcdf367bfd64c986279b3e"
+  },
+  "binary_sha256": "230ea095c587b78d9821f35a4418868ab05c6ce795f832da735320f6f7bc9f4f",
+  "raw_report_sha256": "b52452ec2a9ee9604e2c64202da9e8736f137095c6aa82b8b70c516103ab494b",
+  "cleanup": {
+    "app_state": "stopped",
+    "active_containers": 0
+  },
+  "profiling_counters": "not_tested",
+  "performance_measurement": false
+}

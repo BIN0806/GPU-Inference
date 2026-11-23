@@ -33,6 +33,7 @@ from implemented behavior and measured results.
 - [CPU allocator screening](experiments/0002-cpu-allocator-screening.md): page-size and sharing experiments, raw-data provenance, and measurement limits.
 - [Request-table growth comparison](experiments/0003-request-table-growth.md): paired allocation, retained-memory, and timing results, including a regression.
 - [RMSNorm CPU case records](validation/0007-rmsnorm-cpu.json) and [Linux validation summary](validation/0007-linux-ci.json): numerical and execution evidence.
+- [First native L4 results](validation/0010-modal-l4.json) record the hardware, both numerical matrices, sanitizer summaries, and source and binary hashes.
 - [Native session Linux summary](validation/0009-linux-ci.json): fresh-build host validation and CPU orchestration evidence; no device execution.
 - [Experiment template](templates/EXPERIMENT.md): record hypotheses, configurations, baselines, measurements, and conclusions.
 

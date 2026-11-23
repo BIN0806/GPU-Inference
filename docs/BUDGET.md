@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-11-23. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
+Updated 2026-11-23. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Billed amount recorded so far: $0.00. Modal workspace metering after the first run was about $0.01 before credits and allowances.** The plan is not an instruction to provision now.
 
 ## Envelopes
 
@@ -85,9 +85,22 @@ infrastructure charge or retained provider resource resulted from this chunk.
 
 ## Modal first-session estimate — 2026-11-23
 
-Recorded project spend remains $0 following local adapter preparation. One
+The local adapter preparation incurred zero charges. One
 ten-minute allocation at published L4, CPU and RAM rates is estimated at $0.15
 before other charges or credit. See the [session guide](MODAL.md) for rates,
 assumptions and duration limits. Workspace credit, live capacity and billing
 eligibility await account verification. Count this run within the initial $20
 checkpoint and record the actual usage separately from cash paid.
+
+## Modal first-session receipt — 2026-11-23
+
+The one L4 validation call completed in 13.84 seconds after a capacity wait.
+Modal app inspection reported `stopped` with zero active containers. The
+function used ephemeral disk and returned the report to the caller.
+
+The workspace summary rose from $0.00 to $0.01001791 in metered cost after
+the session. Credits and egress allowance covered that amount in the
+observed snapshot, leaving a billed amount of **$0.00**. These are workspace
+month-to-date readings captured immediately around the run. Final settlement
+and per-App attribution depend on provider billing records. The raw billing
+snapshots and cleanup records are kept with the local session report.

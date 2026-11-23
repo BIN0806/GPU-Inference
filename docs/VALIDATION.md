@@ -309,3 +309,14 @@ appeared; the existing optional NumPy warning remains in the reference job.
 All jobs completed with zero artifact uploads. This follow-up updates evidence
 and documentation only; no executable source, test, workflow, or tolerance
 changed. Actual GPU execution remains the next gate.
+
+## First NVIDIA hardware validation
+
+Modal session `modal-l4-001` tested source `48ed530` on an L4 with driver
+610.57.04 and CUDA 12.8.93. The runner returned `hardware_verified`. Both
+matrices passed (34 smoke and 218 full), using the existing FP16 and FP32
+tolerances. Each sanitizer completed all 34 smoke cases. Memcheck and
+synccheck reported zero errors. Racecheck reported zero hazards, errors, and
+warnings. The result covers the standalone unfused CUDA control on this GPU.
+The local report was checked against the expected case sets and committed
+source hashes. [Evidence summary](validation/0010-modal-l4.json).

@@ -93,12 +93,8 @@ with the documented profiling fallback.
 
 ## Current evidence boundary
 
-The inventory path and orchestration failure cases have executed on CPU. Native
-smoke compilation, CUDA launches, Triton, `torch.compile` on CUDA, memcheck,
-counters, and timeline capture are **not yet executed on hardware** in this
-project. The CUDA smoke source is preparation, not a validated GPU result.
-This script cannot establish that the implemented unfused RMSNorm control is
-correct, fast, or safe across streams. Use the independent
-[native validation session](CUDA_VALIDATION.md) for its smoke/full matrix and
-three sanitizer gates. Native correctness does not depend on framework readiness;
-the framework preflight remains relevant before their comparison work.
+The inventory path and orchestration failure cases have executed on CPU.
+This preflight script's standalone CUDA smoke, framework checks, memcheck,
+counter probe, and timeline capture still await a device run. The independent
+native RMSNorm runner passed its numerical matrices and Compute Sanitizer on a
+Modal L4. [Hardware evidence](validation/0010-modal-l4.json).

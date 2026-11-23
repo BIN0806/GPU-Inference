@@ -868,3 +868,29 @@ exercised success and mismatched-revision handling. The official registry
 returned the pinned amd64 digest. A read-only Modal API check reported a
 missing token. Remote image startup, L4 allocation, device checks and counter
 access await workspace authentication and execution.
+
+### Entry 0015 follow-up — First native GPU gate passed
+
+Modal authenticated successfully and built the pinned CUDA development
+image using CPU resources. The provider reported limited L4 capacity while
+the one invocation waited about 146 seconds. It started on an L4 and the
+existing runner finished in about 14 seconds. The successful CLI returned
+the full JSON report. App inspection then showed a stopped app and zero
+active containers.
+
+The run used clean source `48ed530` and compiled with CUDA 12.8.93 for
+`sm_89`. The report includes the full 34-case smoke and 218-case matrices,
+with bitwise residual matches. The FP16 maximum normalized output absolute
+error (0.00390625) exceeded the absolute tolerance alone. The existing
+elementwise test includes the relative term and every value passed. The
+FP32 maximum was 9.536743e-7. The smoke matrix passed under memcheck,
+racecheck, and synccheck. No kernel or tolerance edits were needed.
+Verified report completeness with the existing parser and matched each
+source hash to the pinned commit. The raw report and provider records are
+retained locally under `artifacts/modal-l4-001/`.
+[Compact evidence](validation/0010-modal-l4.json).
+
+The session validates the numerical baseline for implementing fusion. The
+provider call duration includes compilation and diagnostics. Actual kernel
+latency and profiling permissions remain open. See the budget ledger for the
+metering snapshot and app cleanup evidence.

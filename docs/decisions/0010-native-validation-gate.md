@@ -1,6 +1,6 @@
 # 0010: Separate native kernel validation from framework readiness
 
-Date: 2026-10-27. Status: implemented; CPU orchestration tested; hardware pending.
+Date: 2026-10-27. Status: implemented and verified on one L4.
 
 ## Context
 
@@ -40,5 +40,6 @@ evidence. SIGKILL/detached descendants remain explicit cleanup limitations.
 
 Revisit only when adding another real native variant or kernel. Keep a selected
 implementation in the report then; do not build a generic benchmark framework
-before one useful hardware experiment exists. Hardware validation is still the
-next gate before fusion, framework binding, or performance claims.
+before evaluating how the first hardware experiment works. The native control
+passed its numerical and sanitizer gates on a Modal L4 on November 23, 2026.
+[Hardware evidence](../validation/0010-modal-l4.json).
