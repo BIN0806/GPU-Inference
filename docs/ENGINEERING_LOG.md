@@ -842,3 +842,29 @@ Confirmed all jobs completed and the artifact count was zero. No GPU resource
 or storage was provisioned. This evidence follow-up changes documentation only.
 Deliver by guarded fast-forward, preserve prior local blog articles, and check
 the actual project path before publishing main. The hardware gate remains open.
+
+## Entry 0015 — 2026-11-23 — Prepare the first L4 session on Modal
+
+The user gained access to Modal. Selected one L4 because its 8.9 compute
+capability matches the compiled native control and ten GPU minutes are about
+$0.13 at the published base rate. The [session guide](MODAL.md) records the
+CPU/RAM estimate, billing assumptions and command.
+
+Chose an ephemeral function over an interactive shell so that the existing
+checker controls the order of work and its result reaches the local disk in
+one command. A CPU image build fetches the tested public source revision.
+The function requests one GPU with a 600-second checker deadline. Its caller
+saves the raw report even when the numerical or sanitizer gate fails.
+The fixed baseline makes the first result reproducible. Subsequent source
+changes require an explicit revision update. An interrupted result transfer
+can leave only the provider logs.
+
+Local verification used Modal CLI/SDK 1.6.4. The CLI loaded the entrypoint
+and required an output path. Exercised the function body locally against the
+native runner on the Mac. Missing nvcc caused the expected configure failure,
+and the local entrypoint retained its report before propagating failure.
+An existing output directory prevented another invocation. Synthetic reports
+exercised success and mismatched-revision handling. The official registry
+returned the pinned amd64 digest. A read-only Modal API check reported a
+missing token. Remote image startup, L4 allocation, device checks and counter
+access await workspace authentication and execution.

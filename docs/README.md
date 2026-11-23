@@ -14,6 +14,7 @@ from implemented behavior and measured results.
 | [Residual + RMSNorm](RMSNORM.md) | Supported inputs, rounding semantics, reference setup, and numerical correctness results. |
 | [Unfused CUDA control](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
 | [Native CUDA validation](CUDA_VALIDATION.md) | Fresh-build correctness/sanitizer session, bounded commands, retained evidence, and cancellation. |
+| [First Modal session](MODAL.md) | Run the native numerical and sanitizer checks on one L4 and retrieve the report locally. |
 | [GPU preflight](GPU_PREFLIGHT.md) | Toolchain and profiling checks on an existing GPU host, with inventory kept separate from successful execution. |
 | [CPU benchmarks](BENCHMARKS.md) | Workload configuration, measurement boundaries, output schemas, and interpretation. |
 | [Validation](VALIDATION.md) | Test/sanitizer modes, executed local and hosted checks, and known environment limitations. |

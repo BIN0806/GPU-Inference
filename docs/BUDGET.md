@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-10-27. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
+Updated 2026-11-23. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Actual project spend recorded so far: $0. No rental is active from this work.** The plan is not an instruction to provision now.
 
 ## Envelopes
 
@@ -81,3 +81,13 @@ completed state after the jobs finish. The first $20 checkpoint remains unopened
 Follow-up: run 40469386543 completed all seven standard Linux jobs successfully
 at source `a72a702`; the artifact listing returned zero uploads. No incremental
 infrastructure charge or retained provider resource resulted from this chunk.
+
+
+## Modal first-session estimate — 2026-11-23
+
+Recorded project spend remains $0 following local adapter preparation. One
+ten-minute allocation at published L4, CPU and RAM rates is estimated at $0.15
+before other charges or credit. See the [session guide](MODAL.md) for rates,
+assumptions and duration limits. Workspace credit, live capacity and billing
+eligibility await account verification. Count this run within the initial $20
+checkpoint and record the actual usage separately from cash paid.
