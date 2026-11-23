@@ -11,6 +11,7 @@ from implemented behavior and measured results.
 |---|---|
 | [Dependencies](DEPENDENCIES.md) | Compiler/build requirements, pinned dependencies, offline setup, and optional Python environments. |
 | [Development guide](development/README.md) | Source-code map, allocator ownership rules, examples, and the implementation sequence. |
+| [Next steps after L4 validation](development/NEXT_STEPS.md) | Fused-kernel scope, milestone checks, and what the portfolio release should demonstrate. |
 | [Residual + RMSNorm](RMSNORM.md) | Supported inputs, rounding semantics, reference setup, and numerical correctness results. |
 | [Unfused CUDA control](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
 | [Native CUDA validation](CUDA_VALIDATION.md) | Fresh-build correctness/sanitizer session, bounded commands, retained evidence, and cancellation. |

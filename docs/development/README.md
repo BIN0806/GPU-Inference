@@ -6,6 +6,8 @@ Use this guide to navigate the implemented components. The
 increments, and the [engineering log](../ENGINEERING_LOG.md) records decisions
 and checks as work progresses.
 
+For current priorities and completion criteria, see [the plan after the first L4 run](NEXT_STEPS.md).
+
 ## Allocator code map
 
 | Module | Responsibility |

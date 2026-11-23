@@ -14,6 +14,10 @@ Prefer local CPU work before paid GPU sessions. Keep a single-layer synthetic de
 
 Follow CONTRIBUTING.md for development conventions. When collaboration is requested, consult docs/TEAM_WORKFLOW.md for disjoint ownership, shared-interface changes, and integration. Project skills live in .agents/skills: kvlab-allocator, kvlab-cuda-kernels, kvlab-performance, kvlab-integration-review, and kvlab-engineering-record. Load only the skill relevant to the task. Their existence does not automatically call for subagents or override the user's mentoring preference.
 
+The post-L4 implementation sequence lives in [the development plan](docs/development/NEXT_STEPS.md).
+The [team workflow](docs/TEAM_WORKFLOW.md#optional-installed-skills) describes
+when optional installed skills fit a task.
+
 For each implementation chunk, maintain a standalone post and its index under
 `docs/blogs` locally. This entire directory, including its evidence files, is
 gitignored and must never be staged, force-added, copied into tracked files, or

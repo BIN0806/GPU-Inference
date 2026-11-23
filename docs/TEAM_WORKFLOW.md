@@ -16,6 +16,25 @@ Paths above are repository-local. These skills are supplied as `.agents/skills/<
 
 Use one relevant skill for a focused question. The primary mentor/integrator combines outputs, resolves conflicts, and updates shared records. Do not load all role instructions for a small change. No model override is required by this project.
 
+## Optional installed skills
+
+Choose installed skills as needed alongside the repository roles above. These
+tools are optional on each contributor's machine. The repository's checks and
+contracts apply on any checkout.
+
+| Skill | Use it here |
+|---|---|
+| `no-mistakes` | Run the configured review, tests, lint, docs and CI workflow when the maintainer invokes it for a release or a substantive code change. Confirm the intended branch and delivery target in its configuration. |
+| `socratic-tutor` | Use on request for focused interview practice. Ask the student to work through the FP16 rounding witness, online softmax rescaling, or a delayed GPU reader before offering the answer. |
+| `vision` | Use for an explicit project-vision review when a scope decision changes the end product, such as whether to add real-model serving. The current implementation sequence is in the development plan. |
+| `skill-inspector` | Review a third-party skill's instructions and tooling before making it a project recommendation or sharing it with the team. |
+
+Start the next CUDA chunk with `kvlab-cuda-kernels`, then use
+`kvlab-integration-review` when stream or buffer ownership matters. Use
+`kvlab-performance` when the two variants are ready to compare and
+`kvlab-engineering-record` to capture the result.
+[Milestones after the first L4 run](development/NEXT_STEPS.md).
+
 ## Contract-first work breakdown
 
 Before parallel work, freeze the minimum shared contract: tensor shapes/layout, dtype/rounding, page ID and invalid-sentinel representation, length semantics, ownership, stream, completion, failure/rollback behavior, and supported cases. Put changes to that contract in a short decision record. A change to `cache_view.hpp` is a coordination point even if it is only a few lines.

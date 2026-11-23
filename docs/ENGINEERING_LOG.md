@@ -894,3 +894,18 @@ The session validates the numerical baseline for implementing fusion. The
 provider call duration includes compilation and diagnostics. Actual kernel
 latency and profiling permissions remain open. See the budget ledger for the
 metering snapshot and app cleanup evidence.
+
+## Entry 0016 — Plan the next build after L4 validation
+
+Added a development plan that starts with one fused RMSNorm variant under
+the existing numerical contract. It follows with a matched native comparison,
+address translation and append, a serialized paged decoder, and event-based
+retirement with workload measurements. Keeping these increments distinct lets
+a reviewer attribute correctness or timing changes to a particular decision.
+
+Mapped optional installed skills to release validation, interview practice,
+vision review, and third-party skill evaluation. The CUDA, integration, and
+performance roles remain defined by the repository's own skills. The plan
+records the first L4 run as correctness evidence and leaves measurements to
+their corresponding experiments. This update changes project guidance.
+[Development plan](development/NEXT_STEPS.md) · [Team workflow](TEAM_WORKFLOW.md).
