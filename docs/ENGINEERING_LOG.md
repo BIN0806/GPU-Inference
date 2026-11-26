@@ -931,3 +931,21 @@ Fixtures exercised wrong-variant reports, malformed timings, and failures that
 must stop the benchmark. Modal CLI loaded the adapter locally. GPU execution,
 sanitizers, and measured results for this source will be recorded after the run.
 [Comparison protocol](CUDA_VALIDATION.md#fused-comparison).
+
+### Entry 0017 follow-up — L4 validation and paired measurement
+
+One Modal call checked clean source `10150b1` on an L4 with driver 620.70.06.
+Each variant passed the 34 smoke and 218 full cases, including both targeted
+rounding rows. Fused sanitizer smoke returned zero errors and zero race
+hazards or warnings. Rechecked implementation IDs, per-case reports, source
+hashes, and all 216 timing observations on export. All seven implementation
+CI jobs passed, including CUDA host checks for sm_86 and sm_89.
+[Evidence](validation/0011-modal-l4.json) · [Linux CI](https://github.com/BIN0806/GPU-Inference/actions/runs/45903745286).
+
+Fusion reduced median stream time for the six width-128/1024 shapes. It
+regressed for the three width-4096 shapes. At one row × 4096 the median
+increased from 8.99 to 11.79 µs. Both FP16 norm kernels compiled without
+spills. The row mapping gives the fused first pass less parallel work when
+M is small. A second block size would test this explanation. Kept the control
+callable and advanced the core sequence to KV payload layout and append.
+[Experiment and raw data](experiments/0004-l4-fused-rmsnorm.md) · [Budget](BUDGET.md).

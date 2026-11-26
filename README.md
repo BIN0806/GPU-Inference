@@ -27,8 +27,8 @@ investigate memory utilization, bandwidth, and decode latency.
 
 This project does not currently load models, generate text, or provide a serving
 API. Its core target is a **single-layer synthetic inference benchmark**; a
-complete model-serving engine is outside the core scope. GPU performance results
-are not yet available.
+complete model-serving engine is outside the core scope. The [native L4 benchmark](docs/experiments/0004-l4-fused-rmsnorm.md)
+compares both normalization paths across batch sizes and row widths.
 
 ## Quick start
 

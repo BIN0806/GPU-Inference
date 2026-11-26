@@ -1,6 +1,6 @@
 # Infrastructure budget and session ledger
 
-Updated 2026-11-23. **Total hard ceiling: $100. Initial checkpoint: $20 all-in. Billed amount recorded so far: $0.00. Modal workspace metering after the first run was about $0.01 before credits and allowances.** The plan is not an instruction to provision now.
+Updated 2026-11-26. **Total hard ceiling $100. First checkpoint $20 all-in.** The latest Modal workspace snapshot shows $0.00 billed. The entries below record gross usage and cleanup by session.
 
 ## Envelopes
 
@@ -32,6 +32,7 @@ Cumulative review targets: $20 after normalization evidence; $45 after correct p
 | Chunk 07 | 2026-10-25 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 6 jobs in run 40270856228 completed; artifact count 0; no GPU or persistent volume | 218 reference cases locally and Linux, C++/sanitizer tests, and local tool inventory |
 | Chunk 08 | 2026-10-26 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 7 jobs in run 40427805616 completed; artifact uploads 0; no GPU or persistent volume | Native CUDA compiled/linked, host checks passed; GPU execution untested |
 | Chunk 09 | 2026-10-27 | Local CPU and standard public Linux CI | $0 | $0 | $0 | N/A | All 7 jobs in run 40469386543 completed; artifact uploads 0; no GPU or volume | Native session runner, interruption cleanup, sm_86/sm_89 compilation and host checks |
+| Fused comparison | 2026-11-26 | Modal L4, 1 core, 4 GiB | $0 new cash purchase | $0.00399659 itemized app usage | Final settlement pending | See workspace billing | Stopped, zero active containers, ephemeral disk | Fused correctness and 108 paired observations |
 
 Track cash purchases and resource consumption separately. Using prepaid credit is not a second cash outlay. Include mandatory deposits/fees when checking whether total cash commitment exceeds the ceiling. Do not rely on future refunds, free credits, or automatic account shutdown to enforce the limit.
 
@@ -104,3 +105,20 @@ observed snapshot, leaving a billed amount of **$0.00**. These are workspace
 month-to-date readings captured immediately around the run. Final settlement
 and per-App attribution depend on provider billing records. The raw billing
 snapshots and cleanup records are kept with the local session report.
+
+## Modal fused comparison — 2026-11-26
+
+One authorized call used one L4. The quoted 720-second function allocation
+was about $0.18 before allowances and overhead at the published rates.
+The scheduler waited about 416 seconds before the call ran for 14.41 seconds,
+including the build and validation gates. The app then stopped and inspection
+showed zero active containers. It used ephemeral disk.
+
+The hourly per-app report listed $0.00355540 L4, $0.00029731 CPU, and
+$0.00014388 memory, or **$0.00399659 gross app usage**. The
+November workspace snapshot showed $0.01001791 metered and $0.00 billed.
+Workspace totals include credits, allowances, rounding, and other metering
+on a different schedule. Do not add the app cost to the workspace amount.
+The itemized report and lifecycle receipts are held with the local validation
+report. [Modal pricing](https://modal.com/pricing) ·
+[Native experiment](experiments/0004-l4-fused-rmsnorm.md).

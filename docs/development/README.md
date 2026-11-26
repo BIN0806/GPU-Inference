@@ -61,11 +61,11 @@ limitations belong in [the validation record](../VALIDATION.md).
 
 Follow [the RMSNorm contract](../RMSNORM.md) before implementing a kernel. In
 particular, normalization observes the residual after storage rounding. The
-[standalone CUDA control](../CUDA_RMSNORM.md) now implements separate add and
-RMSNorm kernels. The standalone control passed native numerical and sanitizer
-checks on an L4. Use its hardware result as the starting point for fusion and
-continue to treat framework readiness and profiling access as separate checks.
-[Hardware evidence](../validation/0010-modal-l4.json) · [GPU preflight](../GPU_PREFLIGHT.md).
+[native library](../CUDA_RMSNORM.md) implements a two-kernel control and
+one-block-per-row fused API. The [paired benchmark](../../bench/rmsnorm_cuda_bench.cu)
+compares stream elapsed time and host call-to-ready latency for preallocated
+FP16 buffers. Framework readiness and profiler access have their own
+[preflight](../GPU_PREFLIGHT.md).
 
 ## Run a CPU experiment
 

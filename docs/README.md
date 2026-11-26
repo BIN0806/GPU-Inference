@@ -11,7 +11,7 @@ from implemented behavior and measured results.
 |---|---|
 | [Dependencies](DEPENDENCIES.md) | Compiler/build requirements, pinned dependencies, offline setup, and optional Python environments. |
 | [Development guide](development/README.md) | Source-code map, allocator ownership rules, examples, and the implementation sequence. |
-| [Next steps after L4 validation](development/NEXT_STEPS.md) | Fused-kernel scope, milestone checks, and what the portfolio release should demonstrate. |
+| [Next steps after L4 validation](development/NEXT_STEPS.md) | GPU KV storage and append, milestone checks, and portfolio scope. |
 | [Residual + RMSNorm](RMSNORM.md) | Supported inputs, rounding semantics, reference setup, and numerical correctness results. |
 | [CUDA RMSNorm implementations](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
 | [Native CUDA validation](CUDA_VALIDATION.md) | Fresh-build correctness/sanitizer session, bounded commands, retained evidence, and cancellation. |
@@ -35,6 +35,7 @@ from implemented behavior and measured results.
 - [CPU allocator screening](experiments/0002-cpu-allocator-screening.md): page-size and sharing experiments, raw-data provenance, and measurement limits.
 - [Request-table growth comparison](experiments/0003-request-table-growth.md): paired allocation, retained-memory, and timing results, including a regression.
 - [RMSNorm CPU case records](validation/0007-rmsnorm-cpu.json) and [Linux validation summary](validation/0007-linux-ci.json): numerical and execution evidence.
+- [Fused RMSNorm experiment](experiments/0004-l4-fused-rmsnorm.md) includes raw samples, timings, regressions, and numerical evidence.
 - [First native L4 results](validation/0010-modal-l4.json) record the hardware, both numerical matrices, sanitizer summaries, and source and binary hashes.
 - [Native session Linux summary](validation/0009-linux-ci.json): fresh-build host validation and CPU orchestration evidence; no device execution.
 - [Experiment template](templates/EXPERIMENT.md): record hypotheses, configurations, baselines, measurements, and conclusions.

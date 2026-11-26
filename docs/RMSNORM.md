@@ -1,10 +1,9 @@
 # Residual + RMSNorm: first numerical contract
 
 Chunk 07 implements a standard-library oracle and eager PyTorch reference.
-The separate [native CUDA control](CUDA_RMSNORM.md) now has its own implementation
-and validation boundary. Fused CUDA, Triton normalization, and an end-to-end model
-remain outside the implemented scope. GPU execution of the references remains
-untested until a real device session. [ADR 0008](decisions/0008-rmsnorm-contract.md)
+The [native CUDA library](CUDA_RMSNORM.md) implements both a two-kernel control
+and a fused row kernel. The Python reference has CPU validation. GPU execution
+of the framework reference and the Triton comparison remain open. [ADR 0008](decisions/0008-rmsnorm-contract.md)
 records the alternatives and scope.
 
 ## Supported inputs and outputs

@@ -1,42 +1,37 @@
-# Development plan after the first L4 run
+# Development plan after the native fusion benchmark
 
-The C++ allocator owns request metadata, page references, and shared immutable
-prefixes. The unfused CUDA residual add and RMSNorm control passed 34 smoke cases,
-218 full cases, and three Compute Sanitizer smoke runs on one Modal L4. That
-gives us a reference for the fused kernel. The first session established
-correctness on this device. GPU timing and profiler access remain open.
-[Allocator code map](README.md) · [L4 evidence](../validation/0010-modal-l4.json).
+The C++ allocator owns page metadata and shared immutable prefixes. The native
+CUDA library now has two validated residual + RMSNorm implementations. On one
+L4, warm FP16 fusion won at widths 128 and 1024 and lost at 4096. The experiment
+records both timing boundaries and retains the two-kernel control.
+[Allocator code map](README.md) · [Native comparison](../experiments/0004-l4-fused-rmsnorm.md).
 
 ## Next implementation chunk
 
-Add a separate fused entry point to the native CUDA library and keep the
-unfused entry point callable. Both produce the rounded residual `z` and the
-weighted normalization output `y`. Match the existing dtype, shape, epsilon,
-stream, and buffer requirements.
+Give allocator pages actual K/V payloads. Start with a CPU address oracle.
+Use one layer, one page size, matching query/KV head counts, and one serialized
+stream for the first GPU test.
 
-1. Write down the dataflow for one odd-width FP16 row before editing the CUDA.
-   Use the existing rounding witness to explain why the sum of squares must
-   use the values represented by `z`.
-2. Start with one block per row and the same FP32 shared-memory reduction as
-   the control. The first pass writes `z` and reduces the rounded values. The
-   second pass rereads `z` to produce `y`. This isolates removing a launch and
-   one logical read of `z`. Register retention, warp shuffles, and vector
-   loads can each be tested later as separate changes.
-3. Extend the native checker to select the kernel explicitly and run the same
-   independent oracle and case matrices for both. Exercise the API boundary
-   checks, FP16 rounding witness, short and odd widths, and empty batches.
-4. Compile both target architectures in Linux CI. For the next authorized
-   Modal run, record the exact candidate revision and selected implementation.
-   The existing adapter pins the already-tested control at `48ed530`, so the
-   candidate needs an explicit revision update. Save both numerical reports
-   and run memcheck, racecheck, and synccheck on the fused smoke suite.
-   [Native contract](../CUDA_RMSNORM.md) · [Modal guide](../MODAL.md).
+1. Spell out a single contiguous arena layout per K or V tensor, e.g.
+   `[physical_page, token_in_page, kv_head, channel]`. Check products in
+   wide arithmetic before allocating. For P=4 and table [7,2], token 5 must
+   land on physical page 2, slot 1.
+2. Drive page allocation and table changes through the existing request API.
+   Build independent expected K/V values keyed by logical token, head, and
+   channel. Poison unused physical slots and deliberately shuffle page IDs.
+3. Allocate arenas once. Stage request lengths and page-table IDs, append
+   on the same stream, and copy gathered values back for comparison. Keep
+   table storage and pages alive until the stream completes.
+4. Exercise lengths P−1, P, and P+1. The append reaching P fills the existing
+   page. The following append needs another page. Check every valid element,
+   the unused tail, and a second request with different physical mappings.
 
-The chunk is ready when the fused candidate passes the numerical matrix with
-the existing tolerances and bitwise residual checks, reports clean sanitizer
-smoke results, and has a short explanation of the rounding and synchronization.
-Use `kvlab-cuda-kernels` for the implementation and `kvlab-integration-review`
-for the stream and buffer boundary. [Team workflow](../TEAM_WORKFLOW.md).
+Close this increment when the CPU oracle and GPU append agree across that
+boundary, including after a page has been released and safely reused in the
+serialized driver. Then connect the contiguous attention reference and
+single-layer paged decoder. A separate RMSNorm follow-up can investigate the
+width-4096 regression with one controlled mapping change.
+[Paging roadmap](../../ROADMAP.md#phase-3--paged-attention-decoding).
 
 ## Milestones and evidence
 
@@ -48,14 +43,10 @@ for the stream and buffer boundary. [Team workflow](../TEAM_WORKFLOW.md).
 | Single-layer paged decode | Contiguous reference, paged decode, and a serialized driver using real allocator mappings | Outputs agree on variable lengths and shared-prefix cases. Same-stream append, decode, and release work under cancellation and pool pressure. Trace teardown recovers all pages. |
 | Lifecycle and systems experiments | CUDA event-based retirement, a synthetic workload replay, and a reproducible report | Delayed-reader tests prove page reuse waits for the event. Compare contiguous and paged paths at matched work and, separately, under a fixed memory budget. Record latency, throughput, page waste, queueing, and metadata transfer cost. |
 
-For the first timing sweep, use FP16 and screen a few shapes such as row counts
-`1, 32, 128` and widths `128, 1024, 4096`. Compare warmed, preallocated
-variants in interleaved trial groups and record CUDA-event time and host
-dispatch-to-completion time separately. If cache residency could explain the
-result, add a larger working set as a follow-up. Include compilation and setup
-in a separate report field. Use a brief Nsight probe to check counter access.
-CUDA events and host timing still support the comparison when counters are
-unavailable. [Benchmark protocol](../../ROADMAP.md#7-benchmarking-and-profiling-methodology).
+The first FP16 timing sweep is complete. A comparison with eager PyTorch,
+Triton, and `torch.compile` will need a framework-ready GPU environment and
+the same rounded two-output contract. Counter access remains unverified.
+[Benchmark protocol](../../ROADMAP.md#7-benchmarking-and-profiling-methodology).
 
 For paging, get the address translation, append, and simple attention reference
 working before fusing decode or overlapping streams. Start with one layout,

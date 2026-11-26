@@ -71,8 +71,8 @@ The logical traffic of this two-pass control is **7 scalar element transfers
 per activation element**: x/r reads and z write, two z reads, weight read, y
 write. This is a logical byte model, not measured DRAM traffic; caching can
 change physical transactions. Device/pointer checks also add host overhead.
-This API is a correctness baseline; a later timing harness must clearly separate
-host validation, allocation, and device work. There is no speedup claim.
+The paired harness separately times launches with prevalidated buffers and
+a complete checked call through stream synchronization.
 
 ## Fused entry point
 
@@ -186,3 +186,10 @@ All elements passed the existing absolute-plus-relative tolerance. Memcheck,
 racecheck, and synccheck each passed the smoke suite with zero reported errors.
 Racecheck also reported zero hazards and warnings. Kernel timings and Nsight
 counter access remain open. [Case and environment summary](validation/0010-modal-l4.json).
+
+## Fused L4 validation and timings
+
+The November 26 session ran both variants from revision `10150b1` against the
+same oracle. Both passed 34 smoke and 218 full cases. All three Compute
+Sanitizer smoke passes were clean for fusion. The warm FP16 timings include
+a width-4096 regression. [Results and raw pairs](experiments/0004-l4-fused-rmsnorm.md).

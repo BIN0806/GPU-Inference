@@ -1,0 +1,94 @@
+{
+  "experiment": "modal-l4-002",
+  "source_commit": "10150b107d84fe1c2adc70eb57c0b1d544bc0922",
+  "hardware_checks_passed": true,
+  "compiled_arch": "89",
+  "base_image": "nvidia/cuda@sha256:4b9ed5fa8361736996499f64ecebf25d4ec37ff56e4d11323ccde10aa36e0c43",
+  "gpu_inventory": "NVIDIA L4, 620.70.06, 23034 MiB, 8.9",
+  "compiler": [
+    "Cuda compilation tools, release 12.8, V12.8.93",
+    "Build cuda_12.8.r12.8/compiler.35583870_0"
+  ],
+  "sanitizer_version": [
+    "Copyright (c) 2020-2025 NVIDIA Corporation",
+    "Version 2025.1.0.0 (build 35583870) (public-release)"
+  ],
+  "started_utc": "2026-11-26T22:24:50.215232+00:00",
+  "finished_utc": "2026-11-26T22:25:04.518503+00:00",
+  "gates": {
+    "configure": true,
+    "build": true,
+    "host": true,
+    "smoke": true,
+    "memcheck": true,
+    "racecheck": true,
+    "synccheck": true,
+    "full": true,
+    "control_smoke": true,
+    "control_full": true,
+    "paired_timing": true,
+    "sources_unchanged": true,
+    "binary_unchanged": true
+  },
+  "binary_sha256": "d52bd487d7e1af4b5364390701e6c5f3b6e31a6587d1ddb1e148b15a893b5be5",
+  "source_sha256": {
+    "CMakeLists.txt": "98b3a88adb35c077b9ac30f4dd41446642e8d7b3a2be9a84cb680b683b16a7e4",
+    "include/kvlab/rmsnorm_contract.hpp": "839f5a08d26affc7f967c0f212256e168f574157bf6edad2b7aa0924c8617aac",
+    "include/kvlab/rmsnorm_cuda.hpp": "2837fbbc6751268ff0a032b0259c1fdf75858035ba8d35042d83393bf053cc80",
+    "src/kernels/residual_rmsnorm.cu": "86c394eaf36a927c9682facfccf0cb31112a87c3a31a89633f557753de845635",
+    "tests/cuda/rmsnorm_cuda_check.cu": "b8c8351441e02e12241c092037d8a5880b17ba4bb056756c8d6f56501941960b",
+    "src/kernels/rmsnorm_launch.hpp": "d42e3998f30c4f43961e14a817238f3fab0ea6c4b015d8d745a73ff87e7beb14",
+    "bench/rmsnorm_cuda_bench.cu": "ae3bc0d82180e3e71cf40a4a861b5277214564b2ce42f27cefa920a915cae4d1",
+    "bench/rmsnorm_cuda_bench.hpp": "bf7fee76f0c9e01f546093433460f329ef12e28a26ab196f6f5945c3e376b482",
+    "tests/support/cuda_check_utils.cuh": "4723932d5f377b5e078c6f991ca717550e01de20d45091c15d6879fbe161a466",
+    "scripts/check_rmsnorm_cuda.py": "43a317a73b60372afb9589956fe7b95039c154bb040865d6346fe44c8577c441",
+    "scripts/gpu_preflight.py": "75630b3a7fcefd2b8834846ba4d6ebe48435416352dcdf367bfd64c986279b3e"
+  },
+  "report_sha256": "c7df02988e3042ab5947cdaac15b3d75724f9dffa5dbdc149fed0abf2358172c",
+  "cases": {
+    "smoke": {
+      "implementation": "fused",
+      "cases": 34,
+      "bitwise_residual_matches": 34,
+      "max_abs_error": {
+        "float16": 0,
+        "float32": 2.384185791015625e-07
+      }
+    },
+    "full": {
+      "implementation": "fused",
+      "cases": 218,
+      "bitwise_residual_matches": 218,
+      "max_abs_error": {
+        "float16": 0.00390625,
+        "float32": 9.5367431640625e-07
+      }
+    },
+    "control_smoke": {
+      "implementation": "unfused",
+      "cases": 34,
+      "bitwise_residual_matches": 34,
+      "max_abs_error": {
+        "float16": 0,
+        "float32": 2.384185791015625e-07
+      }
+    },
+    "control_full": {
+      "implementation": "unfused",
+      "cases": 218,
+      "bitwise_residual_matches": 218,
+      "max_abs_error": {
+        "float16": 0.00390625,
+        "float32": 9.5367431640625e-07
+      }
+    }
+  },
+  "sanitizers": {
+    "memcheck": "ERROR SUMMARY: 0 errors",
+    "racecheck": "RACECHECK SUMMARY: 0 hazards displayed (0 errors, 0 warnings)",
+    "synccheck": "ERROR SUMMARY: 0 errors"
+  },
+  "timing_records": 216,
+  "timing_sha256": "849e5bff057f87731ccd9e5641ffaf12d5f64517e0566240c54b546315f4bea1",
+  "linux_ci": "https://github.com/BIN0806/GPU-Inference/actions/runs/45903745286"
+}
