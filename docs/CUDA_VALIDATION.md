@@ -1,9 +1,9 @@
 # Native CUDA validation session
 
 The [runner](../scripts/check_rmsnorm_cuda.py) prepares and checks the existing
-unfused residual/RMSNorm control on an **already provisioned** Linux CUDA host.
+selected residual/RMSNorm variant on an **already provisioned** Linux CUDA host.
 It creates a fresh build, runs correctness gates, and retains diagnostics.
-It performs no provisioning, package installation, timing sweep, permission
+It performs no provisioning, package installation, implicit timing sweep, permission
 changes, or provider cleanup. Native validation does not require PyTorch or
 Triton. Their separate readiness checks remain in [GPU preflight](GPU_PREFLIGHT.md).
 
@@ -92,8 +92,7 @@ python3 scripts/check_rmsnorm_cuda.py --host-only --cuda-arch 86 \
 Neither host mode nor unit-test fixtures may be reported as GPU validation.
 Elapsed times include setup, subprocess overhead, copies, and checks; they are
 **not kernel latency measurements**. Counter permissions and profiler capture
-remain separate preflight results. No timing or fusion work is unlocked until
-the native hardware gates pass and their evidence is reviewed.
+remain separate preflight results. The paired timing mode has additional same-binary correctness gates.
 
 ## Cancellation, export, and limits
 
@@ -133,3 +132,31 @@ The first Modal L4 run returned `hardware_verified` for revision `48ed530`
 on November 23, 2026. It passed all 34 smoke cases, all three sanitizer
 passes on that matrix, and all 218 full cases.
 [Hardware summary](validation/0010-modal-l4.json) · [Reproduce on Modal](MODAL.md).
+
+## Fused comparison
+
+On an existing GPU host, select the fused implementation explicitly. Using the
+L4 architecture as an example:
+
+```sh
+python3 scripts/check_rmsnorm_cuda.py --run-gpu --cuda-arch 89 \
+  --implementation fused --paired-timing --output artifacts/fused-pair-001
+```
+
+This runs the fused smoke suite, the three sanitizer passes, and the full oracle
+matrix. It then checks the unfused smoke and full matrices from the same binary.
+Only then does the runner accept timings from the native bench. The report
+carries the implementation in the header and summary of each correctness run.
+The paired records are JSON lines in `commands.paired_timing.stdout`.
+
+For each of nine FP16 shapes, warm both entries 24 times on the same preallocated
+buffers. Alternate AB and BA across 12 pairs. The CUDA-event interval brackets
+64 launches of the prevalidated **operation** (one or two kernels each). Divide
+group milliseconds by 64 and multiply by 1000 for mean stream microseconds per
+operation. That interval can include gaps if the host cannot feed the stream.
+A separate steady-clock sample times one checked API call through stream sync.
+Allocation, transfers, compilation, warmup, and sanitizers are outside both
+intervals. Buffers are reused at fixed addresses. These measurements describe
+a warm working set. For each shape, report medians and the spread of paired
+control/fused ratios. Individual host observations and per-group event averages
+have different statistical interpretations.

@@ -13,7 +13,7 @@ from implemented behavior and measured results.
 | [Development guide](development/README.md) | Source-code map, allocator ownership rules, examples, and the implementation sequence. |
 | [Next steps after L4 validation](development/NEXT_STEPS.md) | Fused-kernel scope, milestone checks, and what the portfolio release should demonstrate. |
 | [Residual + RMSNorm](RMSNORM.md) | Supported inputs, rounding semantics, reference setup, and numerical correctness results. |
-| [Unfused CUDA control](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
+| [CUDA RMSNorm implementations](CUDA_RMSNORM.md) | Native buffer/stream contract, optional CUDA build, and host versus device validation. |
 | [Native CUDA validation](CUDA_VALIDATION.md) | Fresh-build correctness/sanitizer session, bounded commands, retained evidence, and cancellation. |
 | [First Modal session](MODAL.md) | Run the native numerical and sanitizer checks on one L4 and retrieve the report locally. |
 | [GPU preflight](GPU_PREFLIGHT.md) | Toolchain and profiling checks on an existing GPU host, with inventory kept separate from successful execution. |
@@ -26,6 +26,7 @@ from implemented behavior and measured results.
 - [System scope and lifetime](decisions/0001-scope-and-lifetime.md): CPU/GPU responsibilities and the intended system boundary.
 - Allocator decisions: [page-pool contract](decisions/0002-first-page-pool-contract.md), [sealed pages and leases](decisions/0003-sealed-pages-and-leases.md), [request transactions](decisions/0004-request-transactions.md), and [request-table growth](decisions/0007-request-table-growth.md).
 - [Unfused CUDA control](decisions/0009-unfused-cuda-control.md): standalone kernels, shared reduction, and compile-only CI boundaries.
+- [Fused row decision](decisions/0011-fused-row.md) documents the rounding witness, work mapping, and alternatives.
 - [Native validation gate](decisions/0010-native-validation-gate.md): separate kernel correctness from framework readiness and retain complete evidence.
 - Numerical and validation decisions: [RMSNorm contract](decisions/0008-rmsnorm-contract.md), [CPU measurement](decisions/0005-cpu-workload-measurement.md), and [sanitizer validation](decisions/0006-sanitizer-validation.md).
 

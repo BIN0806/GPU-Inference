@@ -1,4 +1,4 @@
-# Unfused CUDA residual + RMSNorm control
+# CUDA residual addition and RMSNorm
 
 The unfused CUDA control passed the numerical matrix and Compute Sanitizer
 checks on an NVIDIA L4. It provides the comparison baseline for fusion.
@@ -50,7 +50,7 @@ failed. Cleanup must drain outstanding work; a failed call is not a rollback.
 
 ## Kernel mechanics
 
-[residual_rmsnorm.cu](../src/kernels/residual_rmsnorm.cu) contains two launches:
+[residual_rmsnorm.cu](../src/kernels/residual_rmsnorm.cu) contains the two-launch control:
 
 1. A 256-thread, capped-grid, grid-stride add kernel. Its 64-bit element offsets
    cover the flattened input and it rounds the FP32 sum to storage type in `z`.
@@ -61,7 +61,7 @@ failed. Cleanup must drain outstanding work; a failed call is not a rollback.
    reread `z` and write weighted `y` in the original storage dtype.
 
 The block-wide tree is deliberately explicit. Warp shuffles, vectorization,
-register retention, dispatch tuning, and fusion would each change a mechanism
+register retention and dispatch tuning would each change a mechanism
 we can later isolate. Widths smaller than a block and odd tails cannot skip a
 barrier. No `--use_fast_math`; explicit rounded intrinsics and compiler options
 preserve the intended arithmetic. Different reduction orders can still produce
@@ -73,6 +73,20 @@ write. This is a logical byte model, not measured DRAM traffic; caching can
 change physical transactions. Device/pointer checks also add host overhead.
 This API is a correctness baseline; a later timing harness must clearly separate
 host validation, allocation, and device work. There is no speedup claim.
+
+## Fused entry point
+
+`residual_rmsnorm_fused(args, stream)` validates the same descriptor and stream
+as the control. One 128-thread block owns a row. Each thread writes its rounded
+residual and squares the FP32 value decoded from that storage representation.
+Both implementations use the same block reduction and final pass over `z`.
+For the fused path the logical count is six element transfers per activation
+(x, residual, z store, z reload, weight, y store). The output contract requires
+both stores. [Decision and rounding example](decisions/0011-fused-row.md).
+
+The native checker accepts `--smoke fused`, `--full fused`, or
+`--host-only fused`. Omitting the variant selects the control.
+[Run the correctness gates and paired timing](CUDA_VALIDATION.md#fused-comparison).
 
 ## Build without requiring a GPU at configure time
 

@@ -16,13 +16,13 @@ investigate memory utilization, bandwidth, and decode latency.
 |---|---|
 | C++ KV-cache allocator | Fixed-size page management, per-request page tables, reference-counted sharing of immutable prefixes, and memory accounting. Currently manages metadata rather than KV tensor payloads. |
 | Synthetic CPU workloads | Reproducible request replay and benchmarks for allocation behavior, page utilization, and host-side latency. |
-| Residual + RMSNorm | CPU-validated numerical references and standalone, separate CUDA add/normalization kernels. The CUDA control passed its numerical and sanitizer checks on an NVIDIA L4. |
+| Residual + RMSNorm | CPU numerical references, a two-kernel CUDA control, and a fused CUDA implementation with a paired benchmark. Both implementations return the rounded residual and normalized output. |
 | Development tooling | CMake builds, unit and model tests, host sanitizer checks, Linux CI, and GPU environment preflight scripts. The native validation runner can execute on Modal. |
 
 ## What is not implemented yet
 
 - GPU KV-cache storage and allocator-to-device integration.
-- Fused CUDA/Triton normalization kernels and paged decode-attention kernels.
+- Triton normalization and paged decode-attention kernels.
 - GPU completion-aware memory reclamation and integrated decoding benchmarks.
 
 This project does not currently load models, generate text, or provide a serving

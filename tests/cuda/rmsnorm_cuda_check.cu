@@ -1,4 +1,6 @@
 #include "kvlab/rmsnorm_cuda.hpp"
+#include "cuda_check_utils.cuh"
+#include "rmsnorm_cuda_bench.hpp"
 #include <cuda_fp16.h>
 #include <algorithm>
 #include <cmath>
@@ -12,37 +14,16 @@
 #include <vector>
 
 namespace {
-void check(cudaError_t status) {
-  if (status != cudaSuccess) throw std::runtime_error(cudaGetErrorString(status));
-}
+using kvlab::test::check;
+using kvlab::test::DeviceBuffer;
+using kvlab::test::Stream;
+using Operation = decltype(&kvlab::residual_rmsnorm_unfused);
 void require(bool condition, const char* message) {
   if (!condition) throw std::runtime_error(message);
 }
 template <typename T> float value(T x) { return static_cast<float>(x); }
 template <typename T> T storage(double x) { return static_cast<T>(x); }
 template <> __half storage<__half>(double x) { return __double2half(x); }
-
-template <typename T> struct DeviceBuffer {
-  T* data = nullptr;
-  std::size_t bytes;
-  explicit DeviceBuffer(std::size_t count) : bytes(count * sizeof(T)) {
-    if (bytes) check(cudaMalloc(reinterpret_cast<void**>(&data), bytes));
-  }
-  DeviceBuffer(const DeviceBuffer&) = delete;
-  DeviceBuffer& operator=(const DeviceBuffer&) = delete;
-  ~DeviceBuffer() { if (data) cudaFree(data); }
-};
-struct Stream {
-  cudaStream_t stream{};
-  Stream() { check(cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking)); }
-  Stream(const Stream&) = delete;
-  Stream& operator=(const Stream&) = delete;
-  ~Stream() {
-    // The runner drains on exceptional paths before its buffers are destroyed.
-    cudaStreamSynchronize(stream);
-    cudaStreamDestroy(stream);
-  }
-};
 
 template <typename T>
 void oracle(const std::vector<T>& x, const std::vector<T>& r, const std::vector<T>& w,
@@ -65,12 +46,12 @@ void oracle(const std::vector<T>& x, const std::vector<T>& r, const std::vector<
   }
 }
 
-void host_checks() {
+void host_checks(Operation op, const std::string& implementation) {
   // These paths must work without a CUDA device or driver initialization.
   kvlab::RmsNormArgs empty{0, 3, kvlab::RmsNormType::Float16, {}, {}, {}, {}, {}};
-  check(kvlab::residual_rmsnorm_unfused(empty, nullptr));
+  check(op(empty, nullptr));
   empty.width = 0;
-  require(kvlab::residual_rmsnorm_unfused(empty, nullptr) == cudaErrorInvalidValue,
+  require(op(empty, nullptr) == cudaErrorInvalidValue,
           "invalid empty shape accepted");
   std::vector<__half> x = {storage<__half>(1), storage<__half>(2), storage<__half>(3)};
   std::vector<__half> r = {storage<__half>(std::ldexp(1., -11)),
@@ -84,11 +65,11 @@ void host_checks() {
   oracle(a,b,weights,1,2,fz,fy);
   require(fz == a && std::abs(fy[0] - 3/std::sqrt(12.5 + 1e-6F)) < 1e-7,
           "host hand-computed row failed");
-  std::cout << "{\"host_checks\":\"passed\",\"device_execution\":false}\n";
+  std::cout << "{\"implementation\":\"" << implementation << "\",\"host_checks\":\"passed\",\"device_execution\":false}\n";
 }
 
 template <typename T>
-void run_case(int rows, int width, const std::string& pattern) {
+void run_case(Operation op, int rows, int width, const std::string& pattern) {
   constexpr bool half = std::is_same_v<T, __half>;
   constexpr auto type = half ? kvlab::RmsNormType::Float16 : kvlab::RmsNormType::Float32;
   std::cerr << "Case: " << (half ? "float16" : "float32") << " M=" << rows
@@ -108,13 +89,16 @@ void run_case(int rows, int width, const std::string& pattern) {
       const int channel = static_cast<int>(i % 3);
       x[i] = storage<T>(channel + 1);
       r[i] = storage<T>(std::ldexp(1., (half ? -11 : -24) + channel));
+      // Row two isolates using an unrounded add *only* in the denominator.
+      if (half && width == 3 && i >= 3)
+        r[i] = storage<T>(channel == 0 ? 0.0 : std::ldexp(1., -10));
     }
   }
   for (int j=0; j<width; ++j)
     w[j] = storage<T>(pattern == "rounding" ? 1 : pattern == "bounded_large" ? (j%2 ? 16 : -16) : weight(generator));
   oracle(x,r,w,rows,width,expected_z,expected_y);
   if (rows == 0) {
-    check(kvlab::residual_rmsnorm_unfused({0,width,type,{},{},{},{},{}}, nullptr));
+    check(op({0,width,type,{},{},{},{},{}}, nullptr));
   } else {
     DeviceBuffer<T> dx(count), dr(count), dw(width), dz(count), dy(count);
     Stream stream; // Destroy/drain before the buffers on every exception path.
@@ -125,12 +109,12 @@ void run_case(int rows, int width, const std::string& pattern) {
                           {dw.data,dw.bytes},{dz.data,dz.bytes},{dy.data,dy.bytes}};
     auto invalid = args;
     invalid.y.data = invalid.z.data;
-    require(kvlab::residual_rmsnorm_unfused(invalid,stream.stream) == cudaErrorInvalidValue,
+    require(op(invalid,stream.stream) == cudaErrorInvalidValue,
             "overlapping output accepted");
     invalid = args; invalid.x.data = x.data();
-    require(kvlab::residual_rmsnorm_unfused(invalid,stream.stream) == cudaErrorInvalidDevicePointer,
+    require(op(invalid,stream.stream) == cudaErrorInvalidDevicePointer,
             "host pointer accepted");
-    check(kvlab::residual_rmsnorm_unfused(args,stream.stream));
+    check(op(args,stream.stream));
     check(cudaMemcpyAsync(z.data(),dz.data,dz.bytes,cudaMemcpyDeviceToHost,stream.stream));
     check(cudaMemcpyAsync(y.data(),dy.data,dy.bytes,cudaMemcpyDeviceToHost,stream.stream));
     check(cudaStreamSynchronize(stream.stream)); // Observe asynchronous errors here.
@@ -146,9 +130,12 @@ void run_case(int rows, int width, const std::string& pattern) {
     if (error > max_error) { max_error=error; worst=i; }
     squared_error+=error*error; squared_reference+=expected*expected;
   }
-  if (half && rows && width==3 && pattern=="rounding")
+  if (half && rows == 2 && width == 3 && pattern == "rounding") {
     require(value(y[0])==0.462646484375F && value(y[1])==0.92529296875F,
             "rounded-normalization witness failed");
+    require(value(y[3]) == 0.462890625F && value(y[4]) == 0.92578125F,
+            "RMS denominator used the unrounded residual");
+  }
   std::cout << std::setprecision(17) << "{\"dtype\":\"" << (half?"float16":"float32")
             << "\",\"rows\":" << rows << ",\"width\":" << width << ",\"pattern\":\"" << pattern
             << "\",\"residual_bitwise_equal\":true,\"max_abs_error\":" << max_error
@@ -156,15 +143,15 @@ void run_case(int rows, int width, const std::string& pattern) {
             << ",\"worst_flat_index\":" << (count ? std::to_string(worst) : "null") << "}\n";
 }
 
-template <typename T> int matrix(bool full) {
+template <typename T> int matrix(Operation op, bool full) {
   int cases=0;
   const std::vector<int> rows = full ? std::vector<int>{0,1,2,31,32,33,128} : std::vector<int>{0,1,2};
   const std::vector<int> widths = full ? std::vector<int>{1,3,31,32,33,127,128,129,768,1024,4096,8192}
                                        : std::vector<int>{1,3,33,129};
-  for (int m:rows) for (int d:widths) { run_case<T>(m,d,"random"); ++cases; }
+  for (int m:rows) for (int d:widths) { run_case<T>(op,m,d,"random"); ++cases; }
   for (int d: full ? std::vector<int>{1,3,33,129,8192} : std::vector<int>{3})
     for (const char* pattern:{"zero","cancellation","tiny","bounded_large","rounding"}) {
-      run_case<T>(2,d,pattern); ++cases;
+      run_case<T>(op,2,d,pattern); ++cases;
     }
   return cases;
 }
@@ -172,12 +159,22 @@ template <typename T> int matrix(bool full) {
 
 int main(int argc, char** argv) {
   try {
-    if (argc != 2 || (std::string(argv[1])!="--host-only" && std::string(argv[1])!="--smoke" && std::string(argv[1])!="--full")) {
-      std::cerr << "usage: rmsnorm_cuda_check --host-only|--smoke|--full\n";
+    if (argc == 2 && std::string(argv[1]) == "--paired-timing") {
+      run_paired_benchmark();
+      return 0;
+    }
+    const std::string mode = argc >= 2 ? argv[1] : "";
+    const std::string implementation = argc == 3 ? argv[2] : "unfused";
+    if (argc > 3 || (mode != "--host-only" && mode != "--smoke" && mode != "--full") ||
+        (implementation != "unfused" && implementation != "fused")) {
+      std::cerr << "usage: rmsnorm_cuda_check --host-only|--smoke|--full [unfused|fused]"
+                   " or --paired-timing\n";
       return 2;
     }
-    host_checks();
-    if (std::string(argv[1])=="--host-only") return 0;
+    const Operation op = implementation == "fused" ? kvlab::residual_rmsnorm_fused
+                                                    : kvlab::residual_rmsnorm_unfused;
+    host_checks(op, implementation);
+    if (mode == "--host-only") return 0;
     int devices=0;
     check(cudaGetDeviceCount(&devices));
     require(devices>0,"GPU checks require a CUDA device; no successful skip");
@@ -185,9 +182,9 @@ int main(int argc, char** argv) {
     check(cudaGetDeviceProperties(&properties,0));
     check(cudaSetDevice(0));
     std::cerr << "Device: " << properties.name << "; compute capability " << properties.major << '.' << properties.minor << '\n';
-    const bool full=std::string(argv[1])=="--full";
-    const int cases=matrix<float>(full)+matrix<__half>(full);
-    std::cout << "{\"status\":\"passed\",\"device_execution\":true,\"cases\":" << cases << "}\n";
+    const bool full = mode == "--full";
+    const int cases=matrix<float>(op, full) + matrix<__half>(op, full);
+    std::cout << "{\"implementation\":\"" << implementation << "\",\"status\":\"passed\",\"device_execution\":true,\"cases\":" << cases << "}\n";
     return 0;
   } catch (const std::exception& error) {
     std::cerr << "CUDA correctness failed: " << error.what() << '\n';

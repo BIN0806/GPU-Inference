@@ -17,4 +17,7 @@ namespace kvlab {
 // caller-owned event/stream synchronization boundary. Not an autograd/framework binding.
 cudaError_t residual_rmsnorm_unfused(const RmsNormArgs& args, cudaStream_t stream);
 
+// One block per row fuses the add and normalization under the same public contract.
+cudaError_t residual_rmsnorm_fused(const RmsNormArgs& args, cudaStream_t stream);
+
 }  // namespace kvlab

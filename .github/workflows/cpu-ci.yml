@@ -117,3 +117,5 @@ jobs:
           cmake -S . -B build/cuda-89 -G Ninja -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DKVLAB_ENABLE_CUDA=ON -DCMAKE_CUDA_COMPILER=/tmp/kvlab-cuda/bin/nvcc -DCUDAToolkit_ROOT=/tmp/kvlab-cuda -DCMAKE_CUDA_ARCHITECTURES=89
           cmake --build build/cuda-89 --target rmsnorm_cuda_check --parallel 2
           ./build/cuda-89/rmsnorm_cuda_check --host-only
+          ./build/cuda-89/rmsnorm_cuda_check --host-only fused
+          artifacts/cuda-host/build/rmsnorm_cuda_check --host-only fused

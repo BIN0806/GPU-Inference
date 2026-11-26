@@ -909,3 +909,25 @@ performance roles remain defined by the repository's own skills. The plan
 records the first L4 run as correctness evidence and leaves measurements to
 their corresponding experiments. This update changes project guidance.
 [Development plan](development/NEXT_STEPS.md) · [Team workflow](TEAM_WORKFLOW.md).
+
+## Entry 0017 — 2026-11-26 — Fuse the residual and first normalization pass
+
+The new native entry point writes the rounded residual and accumulates its
+squares in one pass. The control and candidate share the 128-thread tree,
+output pass, stream validation, and empty-batch behavior. An odd-width row may
+have idle lanes. They contribute zero and participate in every barrier.
+[Decision](decisions/0011-fused-row.md) · [CUDA source](../src/kernels/residual_rmsnorm.cu).
+
+A CPU calculation exposed a blind spot in the original three-channel witness.
+It did not distinguish a denominator-only error after final FP16 rounding.
+The second witness yields 0.462890625 versus 0.462646484375 in its first channel.
+The same smoke case now checks that channel exactly. The magnitudes, tolerances,
+and matrix sizes stay comparable to the control.
+
+The native runner records variant identity and rejects incomplete or mislabeled
+matrices. A paired mode times both paths after same-binary correctness checks.
+Local macOS Debug passed all 82 CTest checks, including 15 runner tests.
+Fixtures exercised wrong-variant reports, malformed timings, and failures that
+must stop the benchmark. Modal CLI loaded the adapter locally. GPU execution,
+sanitizers, and measured results for this source will be recorded after the run.
+[Comparison protocol](CUDA_VALIDATION.md#fused-comparison).

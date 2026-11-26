@@ -22,20 +22,28 @@ def record(stdout="", status="exited", returncode=0):
     return dict(stdout=stdout, stderr="", status=status, returncode=returncode)
 
 
-def records(mode):
-    result = [runner.HOST_RESULT.copy()]
+def records(mode, implementation="unfused"):
+    result = [dict(runner.HOST_RESULT, implementation=implementation)]
     if mode == "host-only":
         return result
     for dtype, rows, width, pattern in sorted(runner.expected_cases(mode)):
         result.append(dict(dtype=dtype, rows=rows, width=width, pattern=pattern,
                            residual_bitwise_equal=True, max_abs_error=0., normalized_rms_error=0.,
                            worst_flat_index=0 if rows else None))
-    result.append(dict(status="passed", device_execution=True, cases=len(result) - 1))
+    result.append(dict(status="passed", device_execution=True, cases=len(result) - 1, implementation=implementation))
     return result
 
 
 def encoded(rows):
     return record("\n".join(json.dumps(row) for row in rows) + "\n")
+
+
+def timing_rows():
+    return [dict(rows=m, width=d, pair=pair, position=pos, dtype="float16",
+                 implementation="fused" if (pair + pos) % 2 else "unfused",
+                 warmup_calls=24, group_calls=64, event_group_ms=1.5, host_ready_us=4.)
+            for m in (1, 32, 128) for d in (128, 1024, 4096)
+            for pair in range(12) for pos in range(2)]
 
 
 class EvidenceTest(unittest.TestCase):
@@ -46,6 +54,20 @@ class EvidenceTest(unittest.TestCase):
             self.assertTrue(runner.checker_passed(encoded(records(mode)), mode))
         self.assertFalse(runner.checker_passed(encoded(records("host-only")), "smoke"))
         self.assertFalse(runner.checker_passed(encoded(records("smoke")), "full"))
+
+    def test_evidence_must_match_the_selected_kernel(self):
+        for mode in ("host-only", "smoke", "full"):
+            self.assertFalse(runner.checker_passed(encoded(records(mode)), mode, "fused"))
+            self.assertTrue(runner.checker_passed(encoded(records(mode, "fused")), mode, "fused"))
+
+    def test_incomplete_or_invalid_timing_pair_fails(self):
+        rows = timing_rows()
+        self.assertTrue(runner.timing_passed(encoded(rows)))
+        for changes in ({"implementation": "fused"}, {"group_calls": 1}, {"host_ready_us": -1},
+                        {"event_group_ms": float("nan")}, {"position": False}):
+            self.assertFalse(runner.timing_passed(encoded([dict(rows[0], **changes)] + rows[1:])))
+        self.assertFalse(runner.timing_passed(encoded(rows[:-1])))
+        self.assertFalse(runner.timing_passed(encoded(rows + rows[:1])))
 
     def test_missing_duplicate_and_wrong_cases_fail_even_with_success_summary(self):
         original = records("smoke")
@@ -89,7 +111,7 @@ class EvidenceTest(unittest.TestCase):
 
 
 class RunnerTest(unittest.TestCase):
-    def exercise(self, directory, mode="--run-gpu", fail=None):
+    def exercise(self, directory, mode="--run-gpu", fail=None, paired=False):
         output = Path(directory) / "evidence % literal"
         calls = []
         def fake(command, timeout=30):
@@ -115,10 +137,15 @@ class RunnerTest(unittest.TestCase):
                 return encoded(records("smoke")[-1:])
             for check in ("host-only", "smoke", "full"):
                 if "--" + check in values:
-                    return encoded(records(check))
+                    if fail == "control" and check == "full" and values[-1] == "unfused":
+                        return encoded(records(check, "fused"))
+                    return encoded(records(check, values[-1]))
+            if "--paired-timing" in values:
+                return encoded(timing_rows())
             return record("fixture inventory/build")
         with mock.patch.object(runner, "run_command", side_effect=fake), redirect_stdout(io.StringIO()):
-            code = runner.main(["--output", str(output), mode, "--cuda-arch", "86"])
+            code = runner.main(["--output", str(output), mode, "--cuda-arch", "86"] +
+                               (["--implementation", "fused", "--paired-timing"] if paired else []))
         return code, json.loads((output / "validation.json").read_text()), calls
 
     def test_host_only_never_runs_device_or_sanitizer_commands(self):
@@ -141,6 +168,17 @@ class RunnerTest(unittest.TestCase):
             self.assertEqual(list(report["checks"]), ["configure", "build", "host", "smoke", "memcheck", "racecheck", "synccheck", "full", "sources_unchanged", "binary_unchanged"])
             self.assertTrue(all(report["checks"].values()))
             self.assertEqual(len(report["binary_sha256"]), 64)
+
+    def test_paired_run_checks_both_variants_before_sampling(self):
+        for fail in (None, "control", "synccheck"):
+            with self.subTest(fail=fail), tempfile.TemporaryDirectory() as directory:
+                code, report, calls = self.exercise(directory, fail=fail, paired=True)
+                self.assertEqual(report["implementation"], "fused")
+                self.assertEqual(code == 0, fail is None)
+                self.assertEqual("paired_timing" in report["commands"], fail is None)
+                for call in calls:
+                    if "--tool" in call:
+                        self.assertEqual(call[-2:], ["--smoke", "fused"])
 
     def test_failures_stop_dependent_commands_and_preserve_evidence(self):
         for fail in ("configure", "smoke", "memcheck", "racecheck", "synccheck", "interrupt"):

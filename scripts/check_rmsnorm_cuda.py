@@ -1,4 +1,4 @@
-"""Build and validate the native control on an existing host; never rent a GPU."""
+"""Build and validate a native RMSNorm implementation on an existing host; never rent a GPU."""
 import argparse
 from datetime import datetime, timezone
 import hashlib
@@ -16,7 +16,8 @@ from gpu_preflight import CommandInterrupted, run_command, termination_as_interr
 SOURCE_FILES = (
     "CMakeLists.txt", "include/kvlab/rmsnorm_contract.hpp", "include/kvlab/rmsnorm_cuda.hpp",
     "src/kernels/residual_rmsnorm.cu", "tests/cuda/rmsnorm_cuda_check.cu",
-    "scripts/check_rmsnorm_cuda.py", "scripts/gpu_preflight.py",
+    "src/kernels/rmsnorm_launch.hpp", "bench/rmsnorm_cuda_bench.cu", "bench/rmsnorm_cuda_bench.hpp",
+    "tests/support/cuda_check_utils.cuh", "scripts/check_rmsnorm_cuda.py", "scripts/gpu_preflight.py",
 )
 HOST_RESULT = {"host_checks": "passed", "device_execution": False}
 
@@ -52,19 +53,20 @@ def reject_constant(value):
     raise ValueError("nonfinite JSON constant: " + value)
 
 
-def checker_passed(record, mode):
+def checker_passed(record, mode, implementation="unfused"):
     """A success banner cannot substitute for the full, unique numerical case set."""
     if not exited_ok(record):
         return False
     try:
         lines = [json.loads(line, object_pairs_hook=unique_object, parse_constant=reject_constant)
                  for line in record["stdout"].splitlines() if line.strip()]
-        if not lines or lines[0] != HOST_RESULT or lines[0].get("device_execution") is not False:
+        if not lines or lines[0] != dict(HOST_RESULT, implementation=implementation) or lines[0].get("device_execution") is not False:
             return False
         if mode == "host-only":
             return len(lines) == 1
         expected = expected_cases(mode)
-        if (lines[-1] != {"status": "passed", "device_execution": True, "cases": len(expected)}
+        if (lines[-1] != {"status": "passed", "device_execution": True, "cases": len(expected),
+                          "implementation": implementation}
                 or lines[-1].get("device_execution") is not True):
             return False
         seen = set()
@@ -88,6 +90,32 @@ def checker_passed(record, mode):
         return False
 
 
+def timing_passed(record):
+    """Require both variants of every pair, with the planned AB/BA order and units."""
+    if not exited_ok(record):
+        return False
+    expected = {(m, d, pair, pos) for m in (1, 32, 128) for d in (128, 1024, 4096)
+                for pair in range(12) for pos in range(2)}
+    try:
+        for line in record["stdout"].splitlines():
+            row = json.loads(line, object_pairs_hook=unique_object, parse_constant=reject_constant)
+            key = tuple(row[k] for k in ("rows", "width", "pair", "position"))
+            if any(type(v) is not int for v in key) or key not in expected:
+                return False
+            expected.remove(key)
+            implementation = "fused" if (key[2] + key[3]) % 2 else "unfused"
+            if (row["implementation"] != implementation or row["dtype"] != "float16"
+                    or row["warmup_calls"] != 24 or row["group_calls"] != 64):
+                return False
+            for field in ("event_group_ms", "host_ready_us"):
+                v = row[field]
+                if type(v) not in (int, float) or not math.isfinite(v) or v <= 0:
+                    return False
+        return not expected
+    except (ValueError, KeyError, TypeError, OverflowError):
+        return False
+
+
 def sanitizer_clean(text, tool):
     # Unknown formats fail closed. A zero summary must not hide another nonzero one.
     if re.search(r"internal sanitizer error|no attachable process|fatal", text, re.IGNORECASE):
@@ -104,10 +132,15 @@ def main(argv=None):
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--host-only", action="store_true", help="compile and check host paths; no GPU proof")
     mode.add_argument("--run-gpu", action="store_true", help="run numerical and sanitizer gates on an existing GPU")
+    parser.add_argument("--implementation", choices=("unfused", "fused"), default="unfused")
+    parser.add_argument("--paired-timing", action="store_true",
+                        help="also verify the control in this binary, then time both variants")
     parser.add_argument("--cuda-arch", required=True, help="one numeric target, e.g. 86 or 89")
     parser.add_argument("--cuda-compiler", type=Path, help="optional absolute path to nvcc")
     parser.add_argument("--max-seconds", type=int, default=600)
     args = parser.parse_args(argv)
+    if args.paired_timing and not (args.run_gpu and args.implementation == "fused"):
+        parser.error("--paired-timing requires --run-gpu --implementation fused")
     if os.name != "posix":
         parser.error("Linux/macOS process-group runner required")
     if not re.fullmatch(r"[0-9]{2,3}", args.cuda_arch):
@@ -122,7 +155,7 @@ def main(argv=None):
     build = output / "build"
     target = output / "validation.json"
     deadline = time.monotonic() + args.max_seconds
-    report = {"schema_version": 1, "mode": "host-only" if args.host_only else "gpu",
+    report = {"schema_version": 2, "implementation": args.implementation, "paired_timing": args.paired_timing, "mode": "host-only" if args.host_only else "gpu",
               "status": "running", "started_utc": datetime.now(timezone.utc).isoformat(),
               "platform": platform.platform(), "cuda_arch": args.cuda_arch,
               "max_seconds": args.max_seconds, "hardware_checks_passed": False,
@@ -175,21 +208,29 @@ def main(argv=None):
         require("build", exited_ok(run("build", ["cmake", "--build", build, "--target", "rmsnorm_cuda_check", "--parallel", "2"], 180)))
         binary = build / "rmsnorm_cuda_check"
         report["binary_sha256"] = sha256(binary)
-        require("host", checker_passed(run("host", [binary, "--host-only"]), "host-only"))
+        def check_matrix(name, mode, timeout, implementation=args.implementation):
+            record = run(name, [binary, "--" + mode, implementation], timeout)
+            require(name, checker_passed(record, mode, implementation))
+
+        check_matrix("host", "host-only", 30)
         if args.run_gpu:
             run("gpu_inventory", ["nvidia-smi", "--query-gpu=name,driver_version,memory.total,compute_cap", "--format=csv,noheader"])
             run("sanitizer_version", ["compute-sanitizer", "--version"])
-            require("smoke", checker_passed(run("smoke", [binary, "--smoke"], 60), "smoke"))
+            check_matrix("smoke", "smoke", 60)
             for tool in ("memcheck", "racecheck", "synccheck"):
                 log = output / (tool + ".log")
                 # Compute Sanitizer expands percent escapes even in an argv path.
                 command = ["compute-sanitizer", "--tool", tool, "--error-exitcode", "99",
-                           "--print-level", "info", "--log-file", str(log).replace("%", "%%"), binary, "--smoke"]
+                           "--print-level", "info", "--log-file", str(log).replace("%", "%%"), binary, "--smoke", args.implementation]
                 record = run(tool, command, 120)
                 text = log.read_text() if log.is_file() else ""
                 report["commands"][tool]["sanitizer_log"] = text
-                require(tool, checker_passed(record, "smoke") and sanitizer_clean(text, tool))
-            require("full", checker_passed(run("full", [binary, "--full"], 120), "full"))
+                require(tool, checker_passed(record, "smoke", args.implementation) and sanitizer_clean(text, tool))
+            check_matrix("full", "full", 120)
+            if args.paired_timing:
+                check_matrix("control_smoke", "smoke", 60, "unfused")
+                check_matrix("control_full", "full", 120, "unfused")
+                require("paired_timing", timing_passed(run("paired_timing", [binary, "--paired-timing"], 120)))
         require("sources_unchanged", report["source_sha256"] == {name: sha256(root / name) for name in SOURCE_FILES})
         require("binary_unchanged", report["binary_sha256"] == sha256(binary))
         report["hardware_checks_passed"] = args.run_gpu

@@ -67,3 +67,17 @@ checks. It exported its report and the App stopped with zero active containers.
 All numerical and Compute Sanitizer gates passed. These elapsed times describe
 the session and include subprocess overhead. Nsight counters and repeatable
 performance timings still need measurements. [Evidence](validation/0010-modal-l4.json).
+
+## Run the fused comparison
+
+From a clean checkout of a published candidate commit, select its full SHA
+during the CPU image build. Use a fresh output directory for each authorized run.
+
+```sh
+KVLAB_FUSED_REVISION="$(git rev-parse HEAD)" modal run infra/modal/native_check.py::main \
+  --output artifacts/modal-l4-002
+```
+
+The adapter verifies the returned revision and paired timing gate. Leaving
+the variable unset reproduces the original control session. Both modes use
+the same one-L4 allocation and deadlines. [Timing boundaries](CUDA_VALIDATION.md#fused-comparison).

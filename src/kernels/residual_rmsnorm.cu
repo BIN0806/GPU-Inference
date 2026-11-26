@@ -1,4 +1,4 @@
-#include "kvlab/rmsnorm_cuda.hpp"
+#include "rmsnorm_launch.hpp"
 
 #include <cuda_fp16.h>
 #include <algorithm>
@@ -28,14 +28,8 @@ __global__ void residual_add(const T* x, const T* residual, T* z, std::uint64_t 
 }
 
 template <typename T>
-__global__ void rmsnorm(const T* z, const T* weight, T* y, int width) {
-  __shared__ float sums[kNormThreads];
-  const auto row = static_cast<std::uint64_t>(blockIdx.x) * width;
-  float sum = 0.0F;
-  for (int j = threadIdx.x; j < width; j += kNormThreads) {
-    const float value = load_value(z[row + j]);
-    sum = __fadd_rn(sum, __fmul_rn(value, value));
-  }
+__device__ void finish_row(const T* z, const T* weight, T* y, int width,
+                           std::uint64_t row, float sum, float* sums) {
   // Even lanes beyond an odd/short row contribute zero and reach every barrier.
   sums[threadIdx.x] = sum;
   __syncthreads();
@@ -53,7 +47,42 @@ __global__ void rmsnorm(const T* z, const T* weight, T* y, int width) {
 }
 
 template <typename T>
-cudaError_t launch(const RmsNormArgs& args, cudaStream_t stream) {
+__global__ void rmsnorm(const T* z, const T* weight, T* y, int width) {
+  __shared__ float sums[kNormThreads];
+  const auto row = static_cast<std::uint64_t>(blockIdx.x) * width;
+  float sum = 0.0F;
+  for (int j = threadIdx.x; j < width; j += kNormThreads) {
+    const float value = load_value(z[row + j]);
+    sum = __fadd_rn(sum, __fmul_rn(value, value));
+  }
+  finish_row(z, weight, y, width, row, sum, sums);
+}
+
+template <typename T>
+__global__ void fused_rmsnorm(const T* x, const T* residual, const T* weight,
+                              T* z, T* y, int width) {
+  __shared__ float sums[kNormThreads];
+  const auto row = static_cast<std::uint64_t>(blockIdx.x) * width;
+  float sum = 0.0F;
+  for (int j = threadIdx.x; j < width; j += kNormThreads) {
+    const auto i = row + j;
+    const T rounded = store_value<T>(__fadd_rn(load_value(x[i]), load_value(residual[i])));
+    z[i] = rounded;
+    const float value = load_value(rounded);
+    sum = __fadd_rn(sum, __fmul_rn(value, value));
+  }
+  finish_row(z, weight, y, width, row, sum, sums);
+}
+
+template <typename T>
+cudaError_t launch(const RmsNormArgs& args, cudaStream_t stream, detail::Variant variant) {
+  if (variant == detail::Variant::Fused) {
+    fused_rmsnorm<<<static_cast<unsigned>(args.rows), kNormThreads, 0, stream>>>(
+        static_cast<const T*>(args.x.data), static_cast<const T*>(args.residual.data),
+        static_cast<const T*>(args.weight.data), static_cast<T*>(args.z.data),
+        static_cast<T*>(args.y.data), static_cast<int>(args.width));
+    return cudaGetLastError();
+  }
   const auto count = static_cast<std::uint64_t>(args.rows) * args.width;
   const auto blocks = static_cast<unsigned>(std::min<std::uint64_t>(
       (count + kAddThreads - 1) / kAddThreads, 65535));
@@ -67,9 +96,7 @@ cudaError_t launch(const RmsNormArgs& args, cudaStream_t stream) {
       static_cast<T*>(args.y.data), static_cast<int>(args.width));
   return cudaGetLastError();
 }
-}  // namespace
-
-cudaError_t residual_rmsnorm_unfused(const RmsNormArgs& args, cudaStream_t stream) {
+cudaError_t checked_launch(const RmsNormArgs& args, cudaStream_t stream, detail::Variant variant) {
   if (validate_rmsnorm_args(args) != RmsNormValidation::Valid) return cudaErrorInvalidValue;
   if (args.rows == 0) return cudaSuccess;
   int device = -1, stream_device = -1;
@@ -90,6 +117,20 @@ cudaError_t residual_rmsnorm_unfused(const RmsNormArgs& args, cudaStream_t strea
   // Do not erase an outstanding launch error from earlier caller work.
   status = cudaPeekAtLastError();
   if (status != cudaSuccess) return status;
-  return args.type == RmsNormType::Float16 ? launch<__half>(args, stream) : launch<float>(args, stream);
+  return detail::enqueue_validated(args, stream, variant);
+}
+}  // namespace
+
+cudaError_t detail::enqueue_validated(const RmsNormArgs& args, cudaStream_t stream, Variant variant) {
+  return args.type == RmsNormType::Float16 ? launch<__half>(args, stream, variant)
+                                          : launch<float>(args, stream, variant);
+}
+
+cudaError_t residual_rmsnorm_unfused(const RmsNormArgs& args, cudaStream_t stream) {
+  return checked_launch(args, stream, detail::Variant::Unfused);
+}
+
+cudaError_t residual_rmsnorm_fused(const RmsNormArgs& args, cudaStream_t stream) {
+  return checked_launch(args, stream, detail::Variant::Fused);
 }
 }  // namespace kvlab
